@@ -544,7 +544,7 @@ function nodelist(tolerance){
 function nodePartials(){
  // left = 1, right = -1
  return thelist.filter(function(d) {
-    return (d.x0< x.domain()[0] && d.x1>x.domain()[0]) | (d.x0< x.domain()[1] && d.x1>x.domain()[1])}
+    return (d.x0< x.domain()[0] && d.x1>x.domain()[0]) | (d.x0< x.domain()[1] && d.x1>x.domain()[1])})
 }
 
 function textPos(d){
