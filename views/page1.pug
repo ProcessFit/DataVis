@@ -1,0 +1,19 @@
+extends layout
+
+block append scripts
+  <script type="text/javascript" src="js/thumbnail.js"></script>
+  script(src="js/" + selected + ".js")
+  <script  type="text/javascript" src="js/typeahead.js"></script>
+
+
+block content
+  h1= title
+  p D3 Icicle plot implementation
+  div(id='divcontext')
+  br
+  p
+  div(id='chart')
+  P
+
+block link
+  -var selected = 'icicle';

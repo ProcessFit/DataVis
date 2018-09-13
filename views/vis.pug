@@ -1,0 +1,26 @@
+extends layout
+
+block extraHeader
+      link(rel='stylesheet', href='/css/style_old1.css')
+
+
+block append scripts
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
+  <script type="text/javascript" src="../js/thumbnail.js"></script>
+  script(src="../js/" + vis + ".js")
+  <script type="text/javascript" src="../js/typeahead.js"></script>
+  <script type="text/javascript" src="../js/Tween.js"></script>
+
+
+
+block content
+  <br>
+  <br>
+  div(id="divcontext")
+  <br>
+  div(id='chart')
+
+
+  block link
+    -var selected = 'dropdown';

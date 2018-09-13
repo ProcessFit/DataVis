@@ -1,0 +1,17 @@
+extends layout
+
+block extraHeader
+      link(rel='stylesheet', href='/css/style_old1.css')
+
+block content
+  h1= title
+  div.container
+     div(id='log-notes')
+
+       p!= md
+
+
+
+block link
+
+  -var selected = 'research log';

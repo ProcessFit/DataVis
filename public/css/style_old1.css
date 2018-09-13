@@ -1,0 +1,278 @@
+body {
+  padding-top: 120px;
+  padding-left: 25px;
+  width: 100%;
+  height: 100%;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+#chart {
+        left: 0px;
+        right: 0px;
+      }
+
+h4 {
+   padding-top: 20px;
+}
+
+#svg_icicle {
+   width:100%;
+   height: 100%;
+}
+
+#log-notes li:last-child {
+    margin-bottom: 8px;
+}
+
+#log-notes hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 0;
+    border-top: 3px solid #eeeeee;
+}
+a {
+  color: #00B7FF;
+}
+
+.node {
+  fill: #ddd;
+  stroke: #fff;
+}
+
+.zoom {
+  cursor: move;
+  fill: #ddd;
+  opacity: 0.2;
+  pointer-events: all;
+}
+
+.vislabel {
+  font: 12px sans-serif;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.vislabel.selected {
+  font: 14px sans-serif;
+  fill: white;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+
+text.clicked0 {
+  font: 15px sans-serif;
+  font-weight: bold;
+  fill: dk-blue;
+
+}
+
+rect {
+   position: relative;
+   stroke: #fff;
+   stroke-width: 1;
+   stroke-opacity: 0.5;
+   z-index: 2;
+   opacity:0.9;
+   }
+
+rect.selection {
+   stroke-width: 0;
+   opacity:0.1;
+   }
+rect.viewbox {
+   stroke-width: 0;
+   fill: #777;
+   opacity:0.4;
+   pointer-events: none;
+   }
+
+rect.clicked0 {
+   cursor: pointer;
+   position: relative;
+    stroke: #fdea11 !important;
+    stroke-width: 2;
+    stroke-opacity: 1;
+    z-index: 5;
+    opacity: 1;
+    /*filter: url(#drop-shadow);*/
+}
+
+
+#tooltip {
+  position: absolute;
+  text-align: center;
+  padding: 4px;
+  font: 12px sans-serif;
+  background: white;
+  border: 2px;
+  pointer-events: none;
+}
+
+#tooltip-body {
+   color: #000;
+   text-align: left;
+}
+
+#tooltip-body td {
+   padding-left:4px !important;
+}
+
+.ui-autocomplete {
+    position: absolute;
+    z-index: 1000;
+    cursor: default;
+    padding: 0;
+    margin-top: 2px;
+    list-style: none;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    -webkit-border-radius: 5px;
+       -moz-border-radius: 5px;
+            border-radius: 5px;
+    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+       -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+.ui-autocomplete > li {
+  padding: 3px 20px;
+}
+.ui-autocomplete > li.ui-state-focus {
+  background-color: #DDD;
+}
+.ui-helper-hidden-accessible {
+  display: none;
+}
+
+
+
+.bs-example {
+	font-family: sans-serif;
+	position: relative;
+	margin: 100px;
+}
+.typeahead, .tt-query, .tt-hint {
+	border: 2px solid #CCCCCC;
+	border-radius: 8px;
+	font-size: 22px; /* Set input font size */
+	height: 30px;
+	line-height: 30px;
+	outline: medium none;
+	padding: 8px 12px;
+	width: 396px;
+}
+.typeahead {
+	background-color: #FFFFFF;
+}
+.typeahead:focus {
+	border: 2px solid #0097CF;
+}
+.tt-query {
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+}
+.tt-hint {
+	color: #999999;
+}
+.tt-menu {
+	background-color: #FFFFFF;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-radius: 8px;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	margin-top: 12px;
+	padding: 8px 0;
+	width: 422px;
+}
+.tt-suggestion {
+	font-size: 22px;  /* Set suggestion dropdown font size */
+	padding: 3px 20px;
+}
+.tt-suggestion:hover {
+	cursor: pointer;
+	background-color: #0097CF;
+	color: #FFFFFF;
+}
+.tt-suggestion p {
+	margin: 0;
+}
+
+.empty-message {
+  padding: 5px 10px;
+  text-align: center;
+}
+#scrollable-dropdown-menu .tt-dropdown-menu {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.typeahead-field input[type="search"]::-webkit-search-cancel-button {
+  /*Bootstrap 3 override*/
+  -webkit-appearance: searchfield-cancel-button;
+}
+
+/* SLIDER */
+
+.ticks {
+  font: 10px sans-serif;
+}
+
+.track,
+.track-inset,
+.track-overlay {
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: #000;
+  stroke-opacity: 0.3;
+  stroke-width: 15px;
+}
+
+.track-inset {
+  stroke: #ddd;
+  stroke-width: 11px;
+}
+
+.track-overlay {
+
+  pointer-events: stroke;
+  stroke-width: 50px;
+  stroke: transparent;
+  /*cursor: crosshair;*/
+}
+
+text.handle {
+  fill: #0074D9;
+  stroke: #000;
+  stroke-opacity: 0.5;
+  stroke-width: 1.25px;
+  font-size: 2.2em;
+  font-weight: 900;
+  font-color: black;
+}
+
+
+.area {
+  fill: steelblue;
+  clip-path: url(#clip);
+}
+
+rect.handle{
+  fill: red;
+  opacity:1;
+}
+
+img {
+
+   z-index: -15;
+}
+
+.div_float{
+ position:absolute;
+    top:0px;
+    left:0px;
+}
+.div_rel{
+ position:relative;
+    top:0px;
+    left:0px;
+}

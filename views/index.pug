@@ -1,0 +1,11 @@
+extends layout
+
+block extraHeader
+      link(rel='stylesheet', href='/css/style_old1.css')
+
+block content
+  h1= title
+  p This is the starter page
+
+  +attribution("Lindy Woodburn")
+  +button() Test button

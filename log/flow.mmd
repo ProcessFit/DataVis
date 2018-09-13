@@ -1,0 +1,46 @@
+graph TD
+subgraph Load Data
+   E[Load Data]
+end
+subgraph Initialise
+   A[Initialise Chart] --> B(Initialise Variables)
+   B --> C(Initialise SVG Elements)
+   C --> C1(Initialise Dimensions</BR> and Scales)
+end
+subgraph Build Visualisation
+   F[Create Chart <br/> Bind Data]
+   F --> G[Create Context View]
+   G --> H[Create Labels]
+   H --> VR(VISUALISATION READY)
+end
+IMG>Create Snapshot for compact view]
+E -->|Populate Search Box|R
+IMG --> G
+VR --> UP
+C1 --> F
+D --> UP
+E --> F
+subgraph Update Visualisation
+   UP[CHART UPDATES] --> M
+   M["Update Context View </br>(brushed())"] --> N
+   N["Update Scales </br>(reScale())"] --> I
+   Q["Colour Selected Nodes </br>(reColor())"]
+   I["Update Chart</br>(updateIcicle())"] --> J[Update Labels]
+
+end
+subgraph Window events
+   K[Window Resize] --> D(Update Dimensions)
+end
+
+subgraph Vis Events
+   L[Context Brush]
+   O[Chart Drag]
+   P[Chart Click]
+   R[Search/Filter]
+end
+L --> UP
+O --> UP
+P --> UP
+R --> UP
+R --> Q
+P --> Q

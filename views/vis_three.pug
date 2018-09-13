@@ -1,0 +1,22 @@
+extends layout
+
+block append scripts
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.js"></script>
+  <script src="https://threejs.org/examples/js/libs/tween.min.js"></script>
+  script(src="../js/" + vis + ".js")
+  <script  type="text/javascript" src="../js/typeahead.js"></script>
+
+
+block content
+  h1= title
+  p D3 Icicle plot implementation
+  div(id='divcontext')
+  br
+  p
+  div(id='chart')
+  P
+  button(id="tween" style="position:absolute;") TweenMe
+</button>
+
+  block link
+    -var selected = 'dropdown';
