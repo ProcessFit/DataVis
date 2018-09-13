@@ -754,7 +754,7 @@ function updateScale(){
    } else {
       fullScale = x.domain().map((d)=> root.value*d/x2.domain()[1])
    }
-   console.log(fullScale)
+
    xScale.range([0,width])
    xScale.domain(fullScale)
    xAxis.tickValues(fullScale )
@@ -821,6 +821,9 @@ function brushed() {
 }
 
 function fullUpdate(){
+
+   d3.select("#tooltip-body").classed("d-none",!visOptions.tooltips.value)
+
    onWindowResize()
    //zoomRect()
    tagNodes()
@@ -918,9 +921,9 @@ function onMousemove() {
             prevNode = currentNode
          }
         currentNode = d
-       if(visOptions.tooltips.value) {
-          set_tooltip(d)
-       }
+
+     set_tooltip(d)
+       //}
      } else {
         currentNode = ''
         tooltip.style("display","none")
