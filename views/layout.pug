@@ -40,15 +40,6 @@ html
             +nav_item_dropdown( "#","nav-item active")( label="Visualisations" )
               each val, key in drops
                 +nav_dropdown_item( val, key ) #{key}
-              div.dropdown-divider
-              each val, key in drops_three
-                +nav_dropdown_item( val, key ) #{key}
-              div.dropdown-divider
-              each val, key in drops_sunburst
-                +nav_dropdown_item( val, key ) #{key}
-              div.dropdown-divider
-              each val, key in drops_canvas
-                +nav_dropdown_item( val, key ) #{key}
             +nav_item_dropdown( "#","active")( label="Information" )
               each val, key in resourceList
                 +nav_dropdown_item( val, key ) #{key}
