@@ -435,15 +435,7 @@ function init(){
 
    // Add Listeners
    window.addEventListener( 'resize', onWindowResize, false );
-
-   addBrush()
-   drawLabels()
-   tagNodes()
-
-
-
-
-
+   onWindowResize()
 } // init
 
 //--------------------------------------------------------------
@@ -552,8 +544,7 @@ function nodelist(tolerance){
 function nodePartials(){
  // left = 1, right = -1
  return thelist.filter(function(d) {
-    return (d.x0< x.domain()[0] && d.x1>x.domain()[1]) | (d.x0< x.domain()[1] && d.x1>x.domain()[0])
-              })
+    return (d.x0< x.domain()[0] && d.x1>x.domain()[0]) | (d.x0< x.domain()[1] && d.x1>x.domain()[1])}
 }
 
 function textPos(d){
@@ -741,6 +732,7 @@ function onWindowResize() {
       addBrush()
       drawLabels()
       tagNodes()
+      d3.select("#tooltip-body").classed("d-none",!visOptions.tooltips.value)
 }
 
 
@@ -793,7 +785,7 @@ function zoomed() {
 
   tooltip.style("display","none")
   var t = d3.event.transform;
-  console.log("zoomStart", t.rescaleX(x2).domain())
+  //console.log("zoomStart", t.rescaleX(x2).domain())
   zoom_x = t.k;
   x.domain(t.rescaleX(x2).domain());
   updateGL()  // update graphics layer
@@ -822,11 +814,10 @@ function brushed() {
 
 function fullUpdate(){
 
-   d3.select("#tooltip-body").classed("d-none",!visOptions.tooltips.value)
+
 
    onWindowResize()
-   //zoomRect()
-   tagNodes()
+
 }
 
 function brushended(){
