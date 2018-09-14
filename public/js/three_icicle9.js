@@ -84,7 +84,7 @@ var visOptions = {
            'type':'check'},
     'outline':
       {'id': 'outline',
-       'value':false,
+       'value':true,
        'label': 'Outline selected node',
        'type':'check'},
     'context_pct':
@@ -97,7 +97,7 @@ var visOptions = {
       'value': context_pct*100 },
     'tooltips':
          {'id': 'tooltips',
-         'label':'Show tooltip',
+         'label':'Show full tooltip',
          'type': 'check',
          'value': false}
     }
@@ -131,7 +131,7 @@ var compareByCategory = function (a, b) {
 //--------------------------------------------------------------
 // Define and create SVG/DOM Elements
 // -------------------------------------------------------------
-
+d3.select("#sidebar").classed("active",false)
 var chartDiv = d3.select("#chart").attr("class","div_rel")
                                             .append("div")
                                             .attr("id","canvas_holder")
@@ -194,7 +194,7 @@ rect_select_group.append("rect")
      .attr("class", "selection")
      .style("pointer-events", "none")
 
-var label_group = svg.append("g")
+var labels_group = svg.append("g")
     .attr("id", "labels")
 
 var xAxis = d3.axisTop(xScale).ticks(1)
@@ -289,7 +289,7 @@ function reScale() {
   rect_zoom.attr("height", height);
   context.attr("transform", "translate("+(margin)+",0)");
   pointers_group.attr("transform", "translate("+(margin)+",0)");
-  label_group.attr("transform", "translate("+(margin)+",0)");
+  labels_group.attr("transform", "translate("+(margin)+",0)");
   fillBars_group.attr("transform", "translate("+(margin)+",0)");
   rect_select_tagged.attr("transform", "translate("+(margin)+",0)");
   main_scale.attr("transform", "translate(0," + (context_pct * height) + ")")
@@ -436,6 +436,7 @@ function init(){
    // Add Listeners
    window.addEventListener( 'resize', onWindowResize, false );
    onWindowResize()
+   zoomSource = "Initial"
 } // init
 
 //--------------------------------------------------------------
@@ -556,7 +557,7 @@ function textPos(d){
       }
 
 function drawLabels() {
-  labels =  label_group.selectAll("text")
+  labels =  labels_group.selectAll("text")
       .data(nodelist(25), function(d) {return d.id})
   var np = nodePartials()
   labels.enter().append("text")
@@ -600,8 +601,8 @@ function drawLabels() {
    function getText(d, showLimit){
                   //var showLimit = np.indexOf(d) >-1 ? 9:11
                   var text_length = Math.floor((d3.min([x(d.x1),width]) - d3.max([2,x(d.x0)]))/showLimit)
-                  var preAdd = x(d.x0)<-0.0001 ? 	'&#8606; ':''
-                  var postAdd = x(d.x1)>width+0.0001 ? ' &#8608;':''
+                  var preAdd = d.x0< x.domain()[0] ? 	'&#8606; ':''
+                  var postAdd = d.x1> x.domain()[1] ? ' &#8608;':''
                   return preAdd +  d.data.name.slice(0,Math.max(0,text_length))+postAdd
                }
 }; //drawLabels
@@ -611,7 +612,7 @@ function drawLabels() {
 
 
 function pctDisplayed(d) {
-   return (d3.min([x(d.x1),width]) - d3.max([0,x(d.x0)]))/(x(d.x1)- x(d.x0))
+   return (d3.min([d.x1,x.domain()[1]]) - d3.max([x.domain()[0],d.x0]))/(d.x1- d.x0)
 }
 
 
@@ -730,8 +731,7 @@ function onWindowResize() {
       renderer2.render(scene2, camera)
       camera.updateProjectionMatrix();
       addBrush()
-      drawLabels()
-      tagNodes()
+      doUpdates()
       d3.select("#tooltip-body").classed("d-none",!visOptions.tooltips.value)
 }
 
@@ -808,34 +808,53 @@ function brushed() {
       .translate(-s[0], 0));
   updateScale()
   updateGL()  // update graphics layer
-  drawLabels()
-  tagNodes()
+  doUpdates()
 }
 
 function fullUpdate(){
-
-
-
    onWindowResize()
-
+}
+function doUpdates(){
+   drawLabels()
+   zoomRect()
+   tagNodes()
 }
 
 function brushended(){
 
     if (!d3.event.sourceEvent) return; // Only transition after input.
-    drawLabels()
-    tagNodes()
+    doUpdates()
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
     //console.log("brushended2", update_duration, d3.event.sourceEvent  )
     update_mesh(zoom_x)
 
  };
 
+function zoomRect(){
+
+           if (current_zoom_node == '') return
+           var d = current_zoom_node
+           rect_select_group
+           .attr("transform","translate("+(margin+x(d.x0)-1)+","+(context_pct*height + y2(d.depth)-1)+")")
+           .select("rect")
+               .style("width", x(d.x1)-x(d.x0)+2)
+               .style("height",y(partition_h-d.y0)-y(partition_h-d.y1)+2)
+               .attr("class","clicked0")
+               .classed("d-none",!visOptions.outline.value)
+
+            // rect_select_group.select("text")
+            //    .html(d==root?'':d.data.name)
+            //    .on("click", function() { zoomToParent()})
+
+}
+
+
 var zoomSouce;
 function zoomTo(d) {
    if (!d.children) {
       d = d.parent}
    current_zoom_node = d
+   log_mouse("zoomnode_"+zoomSource, d, [d.x0, d.x1])
    zoomToCoords([d.x0, d.x1])
 }
 
@@ -872,9 +891,10 @@ function zoomended(){
      if (Math.pow((zoomStart.x - d3.mouse(this)[0]),2)<4){
            // Move this to a separate function for re-use in search
            d = getIntersect() // point from raycaster
+           current_zoom_node=d
            if (d) {
-            log_mouse("selectnode", d, [d.x0, d.x1])
             zoomSource = "click"
+            log_mouse("zoomnode_"+zoomSource, d, [d.x0, d.x1])
             zoomToCoords([d.x0, d.x1])
             //selected_nodes = [d]
             //select_nodes()
@@ -914,36 +934,17 @@ function onMousemove() {
         currentNode = d
 
      set_tooltip(d)
-       //}
+     labels_group.selectAll("text")
+     .classed("highlight", function(e) {
+        return (e==d)
+     })
      } else {
         currentNode = ''
         tooltip.style("display","none")
      }
   }
 
-function set_tooltip(d){
-   tooltip.style("display","block")
-         .style("opacity", 1)
-         .style("left", (d3.event.pageX-10) + "px")
-         .style("top", (d3.event.pageY + 10) + "px")
-   tooltip_head.html(d.data.name)
-         .style("background-color", d.color)
-   let html_str =
-      "<table>"+
-      "<tr><td>ID: </td><td>" + Math.floor(intersects[0].faceIndex/2) + "  - "+ d.id+"</td></tr>"+
-      "<tr><td>Value: </td><td>" + format_number(d.value) + "</td></tr>"+
-      "<tr><td>Depth: </td><td>" + d.depth + "</td></tr>"
-      if(d.parent) {
-         html_str +=
-      "<tr><td>Parent: </td><td>" + d.parent.data.name +"</td><tr>"
-         if(d.parent.children){
-               html_str += "<tr><td>Siblings:</td><td>" + d.parent.children.length +"</td><tr>"}}
-      if(d.children){
-         html_str += "<tr><td>Children:</td><td>" + d.children.length +"</td><tr>"}
 
-      html_str += "</table>"
-      tooltip_body.html(html_str)
-}
 
 function select_nodes(){
    scene.remove(mesh_highlight)

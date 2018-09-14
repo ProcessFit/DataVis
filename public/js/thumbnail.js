@@ -28,23 +28,12 @@ var tooltip_body = tooltip.append("div")
 
 
 function set_tooltip(d){
-   if(visOptions.tooltips.value) {
    tooltip.style("display","block")
          .style("opacity", 1)
-         .style("left",  (d3.event.pageX-10) + "px")
+         .style("left", (d3.event.pageX-10) + "px")
          .style("top", (d3.event.pageY + 10) + "px")
-   } else {
-      var tp = textXY(d)
-      console.log(tp.y, tp.y + context_pct * height + padding, d3.event.pageY)
-      tooltip.style("display","block")
-            .style("opacity", 1)
-            .style("left", tp.x + "px")
-            .style("top", (tp.y + 209) + "px")
-   }
-
    tooltip_head.html(d.data.name)
          .style("background-color", d.color)
-
    let html_str =
       "<table>"+
       "<tr><td>ID: </td><td>" + Math.floor(intersects[0].faceIndex/2) + "  - "+ d.id+"</td></tr>"+
@@ -60,7 +49,6 @@ function set_tooltip(d){
 
       html_str += "</table>"
       tooltip_body.html(html_str)
-
 }
 
 
@@ -412,7 +400,7 @@ eval_num = 0;
 function eval_init() {
    console.log("Initialise Evaluation")
    //question_init()
-   eval_num += 1
+   eval_num = (Date.now().valueOf()/10000).toFixed(0)  
    if (typeof vis == 'undefined') vis = 'startup'
    var bodyJSON = JSON.stringify({action: 'start_eval', eval_num: eval_num, comment: questions, logTime: new Date(), vis: vis, viewmode: viewmode })
    mongoPost(bodyJSON)
@@ -768,7 +756,7 @@ var questions = [];
 var option_set = [];
 var all_questions = [];
 var viewmode = "Explore"
-d3.select("#sidebar").classed("active",false)
+
 
 //question_init()
 
@@ -1043,13 +1031,15 @@ function showElements() {
 // ----------- VIEW MODES ----------------------------
 
 $(document).ready(function () {
-
+    d3.select("#sidebar").classed("d-none",false)
     $('#collapse_sidebar').on('click', function () {
         updateView('Explore')
     });
 
     $(document).on('click', '.dropdown-item', function() {
-      updateView($(this).text())
+      var item = $(this).text()
+      if (['Explore', 'Evaluation', 'Evaluation-Size', 'Evaluation-Nav', 'Survey', 'Question'].indexOf(item)>-1) {
+      updateView($(this).text())}
       })
     $(document).on('click', '#Options', function() {
       updateView($(this).text())

@@ -207,6 +207,8 @@ var compareByCategory = function (a, b) {
 // -------------------------------------------------------------
 
 // Static elements ... containers for other elements
+
+
 var chartDiv = d3.select("#chart")
         .attr("class","div_rel")
         .append("div")
@@ -607,8 +609,8 @@ function init(){
 
    // Add Listeners
    window.addEventListener( 'resize', onWindowResize, false );
-
-   addBrush()
+   onWindowResize()
+   //addBrush()
    renderSlider(showLevel) // from helper functions
   // initializeBreadcrumbTrail()
   // d3slider.call(d3.drag().on("start drag", function() { showLevel(d3.event.x); }));
@@ -923,7 +925,7 @@ function textPos(d) {
 
 
 function drawLabels() {
-rect_select_tagged
+  //rect_select_tagged
   labels =  labels_group.selectAll("text")
       .data(nodelist(25), function(d) {return d.id})
 
@@ -1182,6 +1184,7 @@ function onWindowResize() {
       camera.updateProjectionMatrix();
       addBrush()
       doUpdates()
+      d3.select("#tooltip-body").classed("d-none",!visOptions.tooltips.value)
 }
 
 
@@ -1568,12 +1571,7 @@ function onMousemove() {
             prevNode = currentNode
          }
         currentNode = d
-        //console.log(d.data.name, showNode(d,25))
-        if(visOptions.tooltips.value) {
-           set_tooltip(d)
-        } else {
-        tooltip.style("display","none")
-        }
+        set_tooltip(d)
         labels_group.selectAll("text")
         .classed("highlight", function(e) {
            return (e==d)
