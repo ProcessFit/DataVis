@@ -73,6 +73,10 @@ var c_depth = d3.scaleLinear() // Scaling for slider bar
        .domain([0,20])
        .clamp(true);
 
+var widthScale =  d3.scalePow().exponent(-1)
+         .domain([0.005,0.02])
+        .range([20, 0]);
+
 // three_x scales recalculated on zooming and re-positioning of meshes
    var three_x = d3.scaleLinear()
               .domain([0,partition_w])
@@ -129,7 +133,7 @@ var visOptions = {
          'min': 1,
          'max': 5,
          'step': 1,
-         'value': 3},
+         'value': 2},
    'hsl_saturation':
              {'label':'Saturation - Top level nodes :',
              'type': 'slider',
@@ -146,6 +150,22 @@ var visOptions = {
                  'max': 5,
                  'step': 0.1,
                  'value': c_depth.range()[1]},
+  'linewidth1':
+                     {'label':'Line Width (min):',
+                     'type': 'slider',
+                     'id': 'linewidth1',
+                     'min': 0.001,
+                     'max': 0.04,
+                     'step': 0.001,
+                     'value': widthScale.domain()[0]},
+     'linewidth2':
+                        {'label':'Line Width (max):',
+                        'type': 'slider',
+                        'id': 'linewidth2',
+                        'min': 0.01,
+                        'max': 0.08,
+                        'step': 0.0025,
+                        'value': widthScale.domain()[1]},
     'tooltips':
          {'id': 'tooltips',
          'label':'Show tooltip',
@@ -525,10 +545,11 @@ function init(){
 
    // Create the meshes based on data supplied
    //mesh = make_treemap(thelist)
-   //mesh_line_h = make_horiz()
-
+   //d3.scaleLinear()
+   widthScale.range([root.height, 0]);
    console.log("making lines")
    for(var j=1; j <= root.height; j++){
+
            var thislayer = thelist.filter((d)=> d.depth == j)
            layer_data.push(thislayer)
 
@@ -548,6 +569,7 @@ function init(){
    }
   mesh_line = leaf_group
   mesh_line2 = lines_group
+
   mesh = mesh_group
    //mesh_line2 = make_thick_lines(thelist)
    // Arrange the views on the canvas
@@ -630,6 +652,27 @@ function init(){
 // MESH definitions
 // -------------------------------------------------------------
 
+function updateLineWidth(){
+   scene.remove(mesh_line2)
+   layer_lines = []
+   var lines_group = new THREE.Group();
+      console.log("making lines")
+      for(var j=1; j <= root.height; j++){
+              var thislayer = thelist.filter((d)=> d.depth == j)
+
+           meshlayer = make_mesh_lines(thislayer)
+           //meshlayer = make_thick_lines(thislayer)
+           layer_lines.push(meshlayer)
+           lines_group.add(meshlayer)
+
+      }
+     mesh_line2 = lines_group
+     scene.add(mesh_line2)
+
+     updateGL()
+     showLevel(slides(selected_level))
+}
+
 
 var face_id = []
 function make_treemap(theList, highlight = false){
@@ -663,25 +706,7 @@ function make_treemap(theList, highlight = false){
   return (new THREE.Mesh(g, planeMaterial));
 } // make_icicle
 
-function make_horiz(){
-   // define the geometry+material
-   var lineGeometryH = new THREE.Geometry();
-      lineGeometryH.vertices.push(new THREE.Vector3( -width/2, 0, 0) );
-      lineGeometryH.vertices.push(new THREE.Vector3( width/2, 0, 0) );
-   var lineMaterial = new THREE.LineBasicMaterial(
-                        {color:  0xdddddd, opacity:1, transparent:false   } );
-   var materials = []
-   var g = new THREE.Geometry();
-   // create the mesh
-   for ( var j = 0; j < root.height+2; j ++ ) { // this should be variable
-             	var mesh = new THREE.Mesh(lineGeometryH);
-               mesh.position.x = 0;
-               mesh.position.y = -(j) * (barheight+barpadding)+barpadding;
-               mesh.position.z = -5;
-               g.mergeMesh(mesh);
-            }
-   return (new THREE.LineSegments(g, lineMaterial));
-} // make_horiz
+
 
 function make_thick_lines(theList, highlight = false){
     var planeGeometry = new THREE.PlaneGeometry(1, 1, 1);
@@ -704,11 +729,6 @@ function make_thick_lines(theList, highlight = false){
                 mesh_v.position.y =((d.y0)+(d.y1))/2.0 -partition_h/2;
                 mesh_v.position.z = -5//-d.depth;
                 mesh_v.scale.set(7/d.depth, d3.max([(d.y1 - d.y0),0.00000001]),1) // width
-                // for ( var j = 0; j < 2; j ++ ) {  // set colour of each face
-                //      mesh_h.geometry.faces[j].color.set(d.color_g);
-                //      mesh_v.geometry.faces[j].color.set(d.color_g);
-                //     }
-
                 g.mergeMesh(mesh_h);
                 g.mergeMesh(mesh_v);
             // }
@@ -751,37 +771,29 @@ function make_merged_line(list_in){
 
 function make_mesh_lines(list_in){
    // draw two sides
-
+   //console.log(list_in.length
+   var group = new THREE.Group();
+   var g = new THREE.Geometry();
+   list_in = list_in.filter((d)=> d.children)
+   if (list_in.length ==0) return group
    var lineGeometry = new THREE.Geometry();
       lineGeometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
       lineGeometry.vertices.push(new THREE.Vector3( 0, 1, 0) );
       lineGeometry.vertices.push(new THREE.Vector3( 1, 1, 0) );
       lineGeometry.vertices.push(new THREE.Vector3( 1, 0, 0) );
       lineGeometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
-    widthScale = d3.scalePow().exponent(-1)
-	           .domain([0.002,0.04])
-	           .range([root.height, 0]);
-    //widthScale = d3.scaleLinear()
-    //           .domain([0.001,0.02])
-    //           .range([root.height, 0]);
+
    var line = new MeshLine();
    line.setGeometry(lineGeometry)
-   //width = 0.03 * (1-list_in[0].depth/root.height)**3
-   width = widthScale.invert(list_in[0].depth)
-   //width = 0.05 * 0.5^(list_in[0].depth)
-   //width = 0.0015 * root.height/((list_in[0].depth))
-   opacity = 1 //(1-list_in[0].depth/root.height)
-   //console.log("opacity", opacity, "width", width)
-   //var lineMaterial = new THREE.LineBasicMaterial(
-    //                 {color: 0xFFFFFF, opacity:0.7, transparent:true } );
+   var line_width = widthScale.invert(list_in[0].depth-1)
+   opacity = 1
    var lineMaterial = new MeshLineMaterial({
             resolution: resolution,
             sizeAttenuation:false,
-            lineWidth: width,
+            lineWidth: line_width,
             transparent: !false,
             opacity:opacity});
-   var group = new THREE.Group();
-   var g = new THREE.Geometry();
+
    // create the mesh
    list_in.forEach(function(d,i){
 
@@ -800,19 +812,19 @@ function make_mesh_lines(list_in){
 	 			})
 
    return (group)
-   var lg = new MeshLine()
+   //var lg = new MeshLine()
 
-   counter = 0
-   lg.setGeometry(g,function( p ) {
-      counter +=1
-   //   console.log(counter, g.vertices.length,p)
-      if (counter%5==0){
-         return 0
-      } else {
-      return 1;
-   }
-      }) //, function(p) {return 5/d.depth;} )
-   return (new THREE.Mesh(lg.geometry, lineMaterial));
+   //counter = 0
+   // lg.setGeometry(g,function( p ) {
+   //    counter +=1
+   // //   console.log(counter, g.vertices.length,p)
+   //    if (counter%5==0){
+   //       return 0
+   //    } else {
+   //    return 1;
+   // }
+   //    }) //, function(p) {return 5/d.depth;} )
+   //return (new THREE.Mesh(lg.geometry, lineMaterial));
 } // make_mesh_lines
 
 
@@ -942,9 +954,9 @@ function drawLabels() {
             .html(function(d){
                //var t = label_text(d)
                t = d.data.name
-               dots = " &#x25CF;"
-                if (d.depth == (selected_level-1) & selected_level>1)
-                   {t+="&#x2934;"}
+               //dots = " &#x25CF;"
+               // if (d.depth == (selected_level-1) & selected_level>1)
+               //    {t+="&#x2934;"}
                return t
             })
          })
@@ -973,6 +985,7 @@ function drawLabels() {
          c +=  d.parent == current_zoom_node ?  " toplevel":""
          c +=  d == current_zoom_node ? " selectednode":""
          c += selected_nodes.includes(d) ? " selected":""
+         c += typeof d.children =='undefined' ? " leaf" :""
          return c
       })
       .transition(d3.easeCubic).duration(0)
@@ -1206,7 +1219,7 @@ function label_click(d){
        } else {
           selected_level +=1
        }
-       zoomSource = "labelClick"
+       zoomSource = "label"
        zoomNode(d)
        tooltip.style("display","none")
 
@@ -1350,7 +1363,7 @@ function brushended(){
     if (!d3.event.sourceEvent) return; // Only transition after input.
     if(d3.event.sourceEvent.type=="mouseup"){
     console.log("--> Brushed", d3.event.sourceEvent.type)
-     log_mouse("brushed", currentNode,[x.domain()[0], x.domain()[1]])
+     log_mouse("context_brush", x.domain(), y.domain())
    }
      return
     doUpdates()
@@ -1369,6 +1382,7 @@ function zoomTo(d) {
       selected_level +=1
    }
    current_zoom_node = d
+
    zoomNode(d)
 }
 
@@ -1440,7 +1454,8 @@ function zoomended(){
         // }//
      } else {
          console.log("--> Panned")
-          log_mouse("panned", root,[x.domain()[0], x.domain()[1]])
+           currentNode = current_zoom_node
+          log_mouse("pan", x.domain(), y.domain())
        }
       zoomStart = {started:Date.now(),x:d3.mouse(this)[0],
              y:d3.mouse(this)[1]}
@@ -1448,7 +1463,10 @@ function zoomended(){
 
      } else {
         console.log("--> Zoomed", d3.event.sourceEvent)
-        if (!d3.event.sourceEvent) {log_mouse("zoomed", root,[x.domain()[0], x.domain()[1]])}
+        if (!d3.event.sourceEvent) {
+           currentNode = current_zoom_node
+           log_mouse("zoom", x.domain(), y.domain())
+        }
      update_mesh()}
   };
 
@@ -1475,9 +1493,12 @@ function updateZoomLevel(){
 
 function zoomNode(d) {
    console.log("--> zoomNode", zoomSource)
-   log_mouse("zoomnode_"+zoomSource, d, [d.x0, d.x1, d.y0, d.y1])
+
    current_zoom_node = d
+   currentNode = d
    coords = fixAspect([ d.x0, d.x1, d.y0, d.y1 ], x2.domain(), y2.domain())
+   zoom_x = partition_w / (coords[1]-coords[0])
+   log_mouse("select_"+zoomSource, [coords[0],coords[1]],[coords[2],coords[3]])
    tween_target = { x0: coords[0], x1: coords[1], y0:coords[2], y1:coords[3]};
    render_tween()
 
@@ -1728,22 +1749,23 @@ function showLevel(sliderVal) {
       d3slider.select(".handle").attr("cx", slides(selected_level))
       // show lines for this level, colours for next)
       for(i=0; i < layers.length; i++){
+
          if (i==selected_level-1){
             layers[i].material.opacity = 0.7
             layer_lines[i].position.z = 0
-            leaf_lines[i].material.opacity=0.15
+            leaf_lines[i].material.opacity=0.8
          } else if (i==selected_level){
             layers[i].material.opacity = 0.4
-            layer_lines[i].position.z = 50
-            leaf_lines[i].material.opacity=0.15
+            layer_lines[i].position.z = 0
+            leaf_lines[i].material.opacity=0.8
          } else if (i<selected_level-1){
-            layers[i].material.opacity = 0.1
+            layers[i].material.opacity = 0.7
             layer_lines[i].position.z = 0
             leaf_lines[i].material.opacity=0.15
          } else {
             layer_lines[i].position.z = 50
-            layers[i].material.opacity = 0.15
-            leaf_lines[i].material.opacity=0.15
+            layers[i].material.opacity = 0.8
+            leaf_lines[i].material.opacity=0.4
          }
    }
    render()

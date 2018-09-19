@@ -10,17 +10,11 @@ html
 
   -var menu = { 'Home': '/', 'Options': '#' };
 
-  -var tools = {'Explore':'#','Evaluation':'#', 'Evaluation-Size':'#', 'Evaluation-Nav':'#','Survey':'#', 'Guide':'#', 'Questions':'/vis1/questions'};
+  -var tools = {'Set 1':'#', 'Set 2':'#', 'Set 3':'#','Set 4':'#','Set 5':'#','Random':'#'};
+
+  -var randoms = {'Compare Size':'#', 'Navigate':'#','Explore':'#','Node Relationship':'#','Common Ancestor':'#', 'Child Nodes':'#'}
 
   -var drops = { 'Icicle': '/vis1/three_icicle9', 'Sundown': '/vis1/three_sunrise8', 'Sunburst':'/vis1/three_sunburst6', 'Treemap':'/vis1/three_treemap8'}
-
-  -var drops_icicle = {'icicle': '/vis/icicle', 'large-elide':'/vis/icicle_3', 'icicle_large [SLOW]': '/vis/icicle_2' };
-
-  -var drops_three = {'three':'/vis/three','threeD3':'/vis/three_d3', 'threeD3_icicle':'/vis/three_icicle','threeD3_icicle3':'/vis/three_icicle3','threeD3_icicle4':'/vis1/three_icicle4', three_icicle5:'/vis1/three_icicle5' };
-
-  -var drops_sunburst = {sunburst_1:'/vis1/three_sunburst', sunburst_3:'/vis1/three_sunburst3' , sunburst_6:'/vis1/three_sunburst6', sunrise_3:'/vis1/three_sunrise3', sunrise_4:'/vis1/three_sunrise4', sunrise_5_up:'/vis1/three_sunrise5'};
-
-  -var drops_canvas = {'d3_canvas':'/vis/icicle_canvas1'};
 
   -var resourceList = {'Research Log': '/blog/logbook', 'Resources':'/blog/resources','Overview': '/blog', 'Timeline': '/blog/timeline','Flowchart': '/blog/flowchart', "Issues/Bugs": '/blog/issues'}
   include mixins
@@ -29,21 +23,22 @@ html
 
     .header
         +nav("Research Project - Data Visualisation", "navigationbar", "navbar-expand-lg navbar-dark bg-primary fixed-top")
-            each val, key in menu
-              if selected === key
-                +nav_item( val, key ,"nav-item active" ) #{key}
-              else
-                +nav_item( val, key, "nav-item" ) #{key}
-            +nav_item_dropdown("#", "nav-item")(label="View Mode")
+            +nav_item_dropdown( "#","nav-item active")( label="Visualisations" )
+                each val, key in drops
+                  +nav_dropdown_item( val, key ) #{key}
+            +nav_item_dropdown("#", "nav-item")(label="Evaluate")
+              +nav_dropdown_item("#", "Show") Show Visualisation
+              div.dropdown-divider
               each val, key in tools
                 +nav_dropdown_item( val, key ) #{key}
-            +nav_item_dropdown( "#","nav-item active")( label="Visualisations" )
-              each val, key in drops
+              div.dropdown-divider
+              each val, key in randoms
                 +nav_dropdown_item( val, key ) #{key}
-            +nav_item_dropdown( "#","active")( label="Information" )
-              each val, key in resourceList
-                +nav_dropdown_item( val, key ) #{key}
-
+              div.dropdown-divider
+              +nav_dropdown_item("#", "Survey") Survey
+              div.dropdown-divider
+              +nav_dropdown_item("#", "Reports") Reports
+            +nav_item( "#", "Options" ,"nav-item" ) Options
     block content
 
     +bootswatch('cerulean')

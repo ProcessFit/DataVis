@@ -10,6 +10,7 @@ function format_description(d) {
 }
 
 var formatDecimal = d3.format(".3f")
+var formatDate = d3.timeFormat("%Y-%m-%d %X");
 // --------------------------------------------------------------------------
 // TOOLTIP
 // adds a tooltip to the page, and provide style options
@@ -145,61 +146,6 @@ function makeImage(svgName){
       return 'data:image/svg+xml;base64,    '+window.btoa(unescape(encodeURIComponent(svgStr)));
 }
 
-
-
-function logEvent(action, target, e, theComment) {
-   // e = event
-   theComment = theComment || ''
-   var cNode = '', pNode = '', mouseX = 0, mouseY = 0
-   if (e){
-      mouseX = e.clientX
-      mouseY = e.clientY
-   }
-   if (currentNode != '') {
-      cNode = currentNode.data.name
-   }
-   if (prevNode != '') {
-      pNode = prevNode.data.name
-   }
-
-   bodyJSON = JSON.stringify({comment:theComment, logTime: new Date(), vis: vis, action: action, target: target, currentNode: cNode, prevNode: pNode,  x: mouseX, y: mouseY })
-
-   mongoPost(bodyJSON)
-}
-
-
-function question_log(){
-   if (q_index < 0) return
-   q_info.time_end = Date.now()
-   q_info.time_elapsed = (q_info.time_end-q_info.time_start)/1000 || 0
-   console.log("logging last question", q_info, tagged)
-   //logEvent(action, target, e, theComment)
-   bodyJSON = JSON.stringify({action: 'eval', comment:q_info, logTime: new Date(), vis: vis, eval_num: eval_num, viewmode: viewmode })
-   mongoPost(bodyJSON)
-}
-
-
-
-function mongoPost(log_this){
-    fetch('/log', {
-      method: 'PUT',
-      body: log_this,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(function(response) {
-        if(response.ok) {
-          console.log('MongoDB logged');
-          return;
-        }
-        throw new Error('Request failed. No mongo!', bodyJSON);
-      })
-      .catch(function(error) {
-      console.log(error);
-      });
-  };
 
 
 
@@ -356,6 +302,7 @@ function updateBreadcrumbs(nodeArray) {
       .attr("points", breadcrumbPoints)
       .style("fill", function(d) { return d.color; })
       .on("click", function(d) {
+
          zoomSource = "breadcrumb"
          zoomNode(d)
       })
@@ -400,9 +347,11 @@ eval_num = 0;
 function eval_init() {
    console.log("Initialise Evaluation")
    //question_init()
-   eval_num = (Date.now().valueOf()/10000).toFixed(0)  
+   eval_num = (Date.now().valueOf()/10000).toFixed(0)
+   var timestamp = Date.now()
    if (typeof vis == 'undefined') vis = 'startup'
-   var bodyJSON = JSON.stringify({action: 'start_eval', eval_num: eval_num, comment: questions, logTime: new Date(), vis: vis, viewmode: viewmode })
+   console.log(questions)
+   var bodyJSON = JSON.stringify({action: 'start_eval', eval_num: eval_num, comment: questions, logTime: timestamp, vis: vis, viewmode: viewmode })
    mongoPost(bodyJSON)
 
    q_index = -1
@@ -414,31 +363,43 @@ function question_init(){
    // initialise log at start of questions
    questions[q_index].expected = questions[q_index].expected || []
    q_info = {qnum: q_index,
+             question: questions[q_index].question || '',
              view: viewmode,
              time_start: Date.now(),
              time_end: undefined,
              answer_expected: questions[q_index].expected.slice(),
              answer_given: [],
              method: undefined,
-             mouseclicks: []}
+             mouseclicks: [],
+            keep: false}
 }
 
 
       //add keyboard events to the main area
 
-function log_mouse(event){
-
+function log_mouse(event, x_domain, y_domain){
+   console.log("log_mouse", event, x_domain)
+   var node = currentNode || current_zoom_node
+   if (typeof x_domain=='undefined') {
+      x_domain = vis=="Sundown"? rads.domain() : x.domain()
+   }
+   x_domain = x_domain.map((d)=>d.toFixed(2))
+   //x_domain = vis=="Sundown" ? rads.domain().map((d)=>d.toFixed(2)) : x_domain
+   if (typeof y_domain=='undefined') {
+      y_domain = y.domain()
+   }
+   y_domain = vis=="Treemap"? y_domain.map((d)=>d.toFixed(2)) : ''
    if (typeof q_info=='undefined') return
    q_info.mouseclicks.push({
          'eval': eval_num,
          'q_num': q_index,
          'event': event,
          'time': (Date.now()-q_info.time_start)/1000,
-         'node': current_zoom_node.id,
-         'name': current_zoom_node.data.name,
-      'x_domain': x.domain(),
-      'y_domain': y.domain(),
-         'zoom': zoom_x})
+         'node': node.id,
+         'name': node.data.name,
+      'x_domain': x_domain,
+      'y_domain': y_domain,
+         'zoom': zoom_x.toFixed(3)})
   console.log(q_info.mouseclicks)
 }
 
@@ -452,20 +413,23 @@ function log_options(params) {
 
 d3.select("body").on("keydown", function() {
         //if (q_index >= questions.length) return // don't tag
-        if ((d3.event.keyCode!=32)| (viewmode =='Survey')) return
+        if (viewmode =='Survey') return
+        console.log("keycode", d3.event.keyCode)
+        if (d3.event.keyCode==32) {
         event.preventDefault();
         //tagSelectedNode()
         d = currentNode
+        console.log("current", currentNode.data.name, tagged)
 
         if (d) {
              if (tagged.indexOf(d)==-1){
-                log_mouse('tagged',d, [d.x0, d.x1])
+                log_mouse('tag_key')
                 tagged.push(d)
             } else {
-               console.log("popping")
+               console.log("popping",d)
                // remove from the list
-               log_mouse('un-tagged',d, [d.x0, d.x1])
-               tagged.pop(d)
+               log_mouse('un-tag_key')
+               tagged.splice( tagged.indexOf(d), 1 );
             }
         if(q_index>=0 ){
            var submit_ready = (tagged.length < questions[q_index].nodes*1)
@@ -475,6 +439,12 @@ d3.select("body").on("keydown", function() {
         }
         tagNodes()
         }
+     } else if (d3.event.keyCode==88){ // 'X' for exclude
+        if(typeof q_info != 'undefined'){
+           q_info.exclude = true
+        }
+     } else
+     { return}
        })
 
 function tagSelectedNode(){
@@ -551,10 +521,14 @@ d3.select("#answer").append("fieldset") // Radio buttons
 
 
 function addHelpers(helperlist){
+  helper_check = []
+  helperlist.forEach((d)=> {
+     helper_check.push(thelist.filter((item)=> item.id==d)[0])})
   var helpers = thelist.filter((items) => helperlist.indexOf(items.id)>-1)
+  console.log("helpers", helper_check, helperlist, helpers)
   var g = d3.select("#helpers")
            .selectAll("div")
-           .data(helpers);
+           .data(helper_check);
 
     var entering = g.enter().append("div")
                   .attr("id", (d)=> "help"+d.id)
@@ -568,6 +542,7 @@ function addHelpers(helperlist){
                      return  d.data.name})
                   .on("click", function(d) {
                       //selected_level = d.depth-2
+                      currentNode = d
                       console.log("helper click")
                       zoomSource = "helper"
                       zoomTo(d)
@@ -636,10 +611,12 @@ btns_.append("button")
    .text("Submit") // SUBMIT BUTTON
    .on("click", function() {
       if (!d3.select("#submit-button").classed("disabled")){
+      currentNode = tagged[0]
+      evaluating = true
       log_mouse("submit")
       q_info.method = 'submit'
       tagged.forEach((d)=>  {
-            q_info.answer_given.push(d.id)})
+            q_info.answer_given.push(d.id, d.data.name, d.depth)})
 
       question_log()
       nextQuestion()
@@ -681,6 +658,11 @@ btns_.append("button")
 var allowTags = true
 var tagged = []
 function tagNodes() {
+   if (typeof vis =='undefined') return
+   if (vis =='Sundown'){
+      tagNodes_arcs()
+      return
+   }
    //if (!allowTags) return;
    var g1 = d3.select("#rect_select_tagged")
               .selectAll("rect")
@@ -698,15 +680,16 @@ function tagNodes() {
                        .classed("highlight",false)
                     })
               .on("click", function(d) {
+                    currentNode = d
                     console.log("tagged_rect")
-                    zoomSource = "tagged"
+                    zoomSource = "tagged_node"
                     zoomTo(d)
                  })
               .merge(g1)
               .attr("width", (d) => x(d.x1)-x(d.x0))
               .attr("height",(d) =>  y(partition_h-d.y0)-y(partition_h-d.y1))
               .attr('y', function(d) {
-                 if (vis =="treemap"){
+                 if (vis =="Treemap"){
                     return (y(partition_h-d.y1))
                  } else {
                     return (context_pct*height + y2(d.depth))
@@ -719,7 +702,7 @@ function tagNodes() {
    var g = d3.select("#tags")
         .selectAll("div")
         .data(tagged);
-   // Add breadcrumb and label for entering nodes.
+
    var entering = g.enter().append("div")
          .attr("id", (d)=> "tag"+d.id)
          .attr("class", "list-group-item")
@@ -730,6 +713,7 @@ function tagNodes() {
             return  d.data.name})
          .on("click", function(d) {
              console.log("textclick")
+             currentNode = d
              zoomSource = "tagged_text"
              zoomTo(d)
          })
@@ -738,6 +722,7 @@ function tagNodes() {
          .text("x")
          .on("click", function(d) {
              tagged.splice(tagged.indexOf(d),1);
+             log_mouse("un-tag_text")
              tagNodes()
              d3.event.stopPropagation()
              if ((q_index > 0) && (tagged.length < questions[q_index].nodes*1)){
@@ -755,7 +740,7 @@ var q_index = -1
 var questions = [];
 var option_set = [];
 var all_questions = [];
-var viewmode = "Explore"
+var viewmode = "Show Visualisation"
 
 
 //question_init()
@@ -779,11 +764,14 @@ function questionFrontPage(){
 }
 
 function nextQuestion(){
+
    question_el() // reset
    tagged = []
    q_index +=1
    var q_string = ""
    if (q_index == questions.length) {
+      evaluating = false
+      d3.select("#Options").select("a").classed("disabled", false)
       d3.select("#answers").classed("d-none",true)
       //d3.select("#Evaluation").classed("d-none",true)
       d3.select("fieldset").classed("d-none", true)
@@ -799,6 +787,7 @@ function nextQuestion(){
 
    } else if (q_index < questions.length) {
       // next question
+      d3.select("#Options").select("a").classed("disabled", true)
       q_string = questions[q_index].question
       console.log("nextQuestion", viewmode, q_index,questions[q_index].class)
       switch (questions[q_index].class) {
@@ -1031,14 +1020,16 @@ function showElements() {
 // ----------- VIEW MODES ----------------------------
 
 $(document).ready(function () {
+    visOptions.question_seed = 1000
     d3.select("#sidebar").classed("d-none",false)
     $('#collapse_sidebar').on('click', function () {
-        updateView('Explore')
+        updateView('Show Visualisation')
+
     });
 
     $(document).on('click', '.dropdown-item', function() {
       var item = $(this).text()
-      if (['Explore', 'Evaluation', 'Evaluation-Size', 'Evaluation-Nav', 'Survey', 'Question'].indexOf(item)>-1) {
+      if (['Set 1', 'Set 2', 'Set 3', 'Set 4','Set 5', 'Random','Survey','Reports', 'Explore', 'Show Visualisation', 'Compare Size', 'Navigate','Node Relationship', 'Common Ancestor','Child Nodes'].indexOf(item)>-1) {
       updateView($(this).text())}
       })
     $(document).on('click', '#Options', function() {
@@ -1075,31 +1066,61 @@ function updateView(theItem){
   return
   } // early exit if mid-
 //} else {
-
+  var q_add
+  d3.selectAll("#report_div").remove()
+  d3.select("#chart").classed("d-none", false)
+  d3.select("#sidebar").classed("d-none", false)
   question_el() // default display for all eval
   switch (theItem) {
-     case 'Evaluation':
-        hide_el.type = 'Evaluation'
-        questions = all_questions['category_questions']
+
+     case 'Set 1':
+     case 'Set 2':
+     case 'Set 3':
+     case 'Set 5':
+         var q_add = +theItem.split(' ')[1]*10
+         questions = random_all(visOptions.question_seed+q_add)
+         hide_el.type = 'Evaluation'
+         //questions = all_questions['category_questions']
          break;
-     case 'Evaluation-Size':
+     case 'Set 4':
+         var q_add = 124
+         questions = random_all(visOptions.question_seed+q_add)
+         hide_el.type = 'Evaluation'
+         break;
+     case 'Random':
+         questions = random_all()
+     case 'Compare Size':
          hide_el.type = 'Evaluation - Size Comparison'
-         questions = randomSizeQuestion(1)
+         questions = randomSizeQuestion() //randomSizeQuestion(1)
          break;
-    case 'Evaluation-Nav':
+    case 'Navigate':
         hide_el.type = 'Evaluation - Navigation Tasks'
         questions = randomNavQuestion()
         break;
+    case 'Explore':
+            hide_el.type = 'Evaluation - Exploration Tasks'
+            questions = randomExploreQuestion()
+            break;
+     case 'Node Relationship':
+             hide_el.type = 'Evaluation - Relationships'
+             questions = randomTwoNodeRelation()
+             break;
+     case 'Common Ancestor':
+             hide_el.type = 'Evaluation - Ancestor'
+             questions = randomCommonAncestor()
+             break;
+     case 'Child Nodes':
+            hide_el.type = 'Evaluation - Count'
+            questions = randomCountQuestion()
+            break;
      case 'Survey':
          questions = all_questions['survey_questions']
-         //hide_el.sidebar=false
          hide_el.type='Participant Survey'
-         // hide_el.prompt ='<b>Response:</b>'
-         // hide_el.answers= false
-         // hide_el.submit = false
-         // hide_el.go = true
-         //hide_el.fieldset = true
          break;
+     case 'Reports':
+              setupReport()
+              return
+              break;
      case 'Options':
         console.log("OPTIONS PICKED")
         hide_el = {'sidebar':true,
@@ -1114,14 +1135,18 @@ function updateView(theItem){
                   'questions': true}
          addOptionsDiv()
          break;
-     case 'Explore':
+     case 'Show Visualisation':
+         console.log("Show--->")
+         d3.select("#Options").select("a").classed("disabled",false)
          reset_el()
          break
      default:  // e.g. Explore
+     console.log("UNDEFINED VIEW SELECTED")
         reset_el()
    } // end switch
+   console.log("theItem",theItem)
    viewmode = theItem
-   if (['Explore','Options'].indexOf(viewmode)==-1) {
+   if (['Show Visualisation','Options'].indexOf(viewmode)==-1) {
       // logs the start of the new eval
       eval_init()
    } else {
@@ -1186,8 +1211,10 @@ function addOptionsDiv(){
           .style("width", "100%")
           .property("values",(d) =>  d.value.length == 1? d.value: d.value[0])
           .on("input", function(d) {
+
                   updatePct(d)
-                  fullUpdate()
+                  //fullUpdate()
+
             })
            .on("mouseup", (d) => log_options({"option":d.id, "value": d.value}))
 
@@ -1266,14 +1293,24 @@ function updatePct(el){
       .text(t_val);
    visOptions[el.id].value = val
    //console.log("updatePct:",el, val, visOptions[el.id].value)
-   if (el.id=='context_pct') {context_pct = val/100}
+   if (el.id=='context_pct') {
+      context_pct = val/100
+      fullUpdate()}
    if (el.id=='hsl_saturation') {
          c_depth.range([val, c_depth.range()[1]])
-         updateNodeColour()}
+         updateNodeColour()
+         fullUpdate()}
    if (el.id=='hsl_saturation2') {
          //console.log(c_depth.range(), c_depth.domain(), val)
          c_depth.range([c_depth.range()[0],val])
-         updateNodeColour()}
+         updateNodeColour()
+         fullUpdate()}
+   if (el.id=='linewidth1') {
+         widthScale.domain([val, widthScale.domain()[1]])
+         updateLineWidth()}
+   if (el.id=='linewidth2') {
+         widthScale.domain([widthScale.domain()[0],val])
+         updateLineWidth()}
    //onWindowResize()
 }
 
@@ -1327,24 +1364,35 @@ function updateColour(n){
    updateNodeColour()
 }
 
+//---------------------------------------------------------
+// Questions
+//---------------------------------------------------------
 
-function randomSizeQuestion(mode){
+
+
+function randomSizeQuestion(seed, q_count){
+   if(typeof thelist=='undefined') return
+   if (typeof seed =='undefined') seed = 123
+   if (typeof q_count =='undefined') q_count = 10
+   var rand = mulberry32(seed)
+
    q_size = []
    parent_list = thelist.filter((d)=> d.height >=4)
-   while (q_size.length < 10) {
-      parent =  parent_list[parseInt(Math.random()*parent_list.length)]
+
+   while (q_size.length < q_count) {
+      parent =  parent_list[parseInt(rand()*parent_list.length)]
       p1 = parent.descendants().filter((d)=>d.children)
       samenode = true
       n = 0
-      while (samenode & n < 10) {
-         n1 = p1[parseInt(Math.random()*p1.length)]
-         n2 = p1[parseInt(Math.random()*p1.length)]
+      while (samenode & n < 20) {
+         n1 = p1[parseInt(rand()*p1.length)]
+         n2 = p1[parseInt(rand()*p1.length)]
          samenode = (n1==parent) |(n1==n2) | (n2==parent) | (n1.value == n2.value)
          n++
       }
       if (!samenode) {
-      q = {class: "comparison",
-           helpers: mode==1? [parent.id, n1.id, n2.id]:[n1.id, n2.id],
+      q = {class: "comparison-size",
+           helpers:[parent.id, n1.id, n2.id],
            id: q_size.length+1,
            nodes: 1,
            question: "<br><b>'"+ n1.data.name + "'</b> and <b>'"+ n2.data.name + "'</b> are both descendants of <b>''" + parent.data.name +"</b>. <br><br>Tag the <b>largest</b> of these two nodes.<br><br>",
@@ -1355,17 +1403,53 @@ function randomSizeQuestion(mode){
    return (q_size)
 }
 
-function randomNavQuestion(mode){
-   q_size = []
-   nav_to = thelist.filter((d)=> !d.children)
+function randomCountQuestion(seed, q_count){
+    if(typeof thelist=='undefined') return
+    if (typeof seed =='undefined') seed = 123
+    if (typeof q_count =='undefined') q_count = 10
+    var rand = mulberry32(seed)
 
-   for (var i = 1; i < 10; i ++){
-      n1 =  nav_to[parseInt(Math.random()*nav_to.length)]
-      np = ''
+   var q_size = []
+   var node_list = thelist.filter((d)=> (d.height >=2) & (typeof d.children!= 'undefined'))
+
+   node_list = node_list.filter((d) => d.children.length >2)
+   //console.log(node_list)
+   while (q_size.length < q_count) {
+      var n2 = []
+         var n1 =  node_list[parseInt(rand()*node_list.length)]
+
+         n2 = node_list.filter((d) =>(d.children.length != n1.children.length) & (Math.abs(d.children.length - n1.children.length)<7))
+
+      n2 = n2[parseInt(rand()*n2.length)]
+      q = {class: "comparison-count",
+           helpers:  [ n1.id, n2.id],
+           id: q_size.length+1,
+           nodes: 1,
+           question: "Which of these nodes: <br><b>'"+ n1.data.name + "'</b> and <b>'"+ n2.data.name + "'</b> has the most children (sub-categories)?<br><br>Tag the node with the <b>most children</b> <br>",
+           expected: n1.children.length > n2.children.length ? [n1.id] : [n2.id]}
+      q_size.push(q)
+   }
+
+   return (q_size)
+}
+
+
+function randomNavQuestion(seed, q_count){
+    if(typeof thelist=='undefined') return
+    if (typeof seed =='undefined') seed = 123
+    if (typeof q_count =='undefined') q_count = 10
+    var rand = mulberry32(seed)
+
+   var q_size = []
+   var nav_to = thelist.filter((d)=> !d.children)
+
+   while (q_size.length < q_count){
+      var n1 =  nav_to[parseInt(rand()*nav_to.length)]
+      var np = ''
       nodePath(n1).forEach((d) => np += d.data.name + ' > ')
       np = np.slice(0,np.length-3)
       q = {class: "navigation",
-           id: i,
+           id: q_size.length+1,
            nodes: 1,
            question: "<br>Navigate to the node <b>'"+ n1.data.name + "'</b> and tag it<br><br>'<i>" + np+"'</i>",
            expected: [n1.id]}
@@ -1373,6 +1457,219 @@ function randomNavQuestion(mode){
       q_size.push(q)
    }
    return (q_size)
+}
+
+function shuffle(a,seed) {
+   // shuffle array ... uses to pick random attributes for explore questions
+   var rand = mulberry32(seed)
+    for (let i = a.length; i; i--) {
+        let j = Math.floor(rand() * i);
+        [a[i - 1], a[j]] = [a[j], a[i - 1]];
+    }
+    return a
+}
+
+
+
+function randomTwoNodeRelation(seed, q_count){
+    if(typeof thelist=='undefined') return
+    if (typeof seed =='undefined') seed = 123
+    if (typeof q_count =='undefined') q_count = 10
+    var rand = mulberry32(seed)
+   var q_size = []
+   var nav_to = thelist.filter((d)=> (d.depth> 3) & (typeof d.children != 'undefined'))
+
+   while (q_size.length < q_count){
+    var n1 =  nav_to[parseInt(rand() * nav_to.length)]
+    var n2;
+    // randomly pick question answer
+    var n_index = parseInt(rand()*6) // gives 0 to 5
+    console.log(n1, n_index, nav_to.indexOf(n1), nav_to.length)
+    switch (n_index){
+      case 0: //1: A is the child of B
+         n2 = n1.parent
+         break;
+      case 1://1: A is the parent of B
+         n2 = n1.children[parseInt(rand()*n1.children.length)]
+         console.log("check n2 children", typeof n2)
+         break;
+      case 2://2:A indirect parent of n2
+         var ndesc = n1.descendants().filter((d)=> d.depth > n1.depth+1)
+         if (ndesc.length>0){
+         n2 = ndesc[parseInt(rand()*(ndesc.length))]
+         console.log("check n2 descendants", ndesc, n2, typeof n2)
+         break;}
+         console.log("zero length .... proceed")
+         n_index += 1
+      case 3: // 3:n1 indirect child of n2
+         var nanc = n1.ancestors().filter((d)=> d.depth < n1.depth-1)
+         if (nanc.length > 0){
+         n2 = nanc[parseInt(rand()*(nanc.length))]
+         break;}
+         console.log("zero length .... proceed")
+         n_index += 1
+      case 4: // 4:sibling
+         var siblings = n1.parent.children.filter((d)=> d!= n1)
+         if(siblings.length>0){
+            n2 = siblings[parseInt(rand()*(siblings.length))]
+            break;
+         }
+      case 5: // 5: same level
+         var samelevel = nav_to.filter((d)=>(d!=n1) & (d.depth == n1.depth))
+         n2 = samelevel[parseInt(rand()*(samelevel.length))]
+         break;
+     }
+
+    q = {class: "explore",
+             id: q_size.length+1,
+             nodes: 1,
+             helpers: [n1.id, n2.id],
+             question: "<br>What is the relationship between<ul><li><b>A: '"+ n1.data.name+ "'</b>, and </li><li> <b>B:    '"  + n2.data.name + "</b>?</li></ul>",
+             expected:[n_index, option_set.structure[n_index]],
+             class: "structure_options",
+          options: "structure"}
+        //console.log(n1.id, n1, q)
+        q_size.push(q)
+     }
+     return (q_size)
+
+}
+
+function randomCommonAncestor(seed, q_count){
+    if(typeof thelist=='undefined') return
+    if (typeof seed =='undefined') seed = 123
+    if (typeof q_count =='undefined') q_count = 10
+    var rand = mulberry32(seed)
+   var q_size = []
+   var nav_to = thelist.filter((d)=> d.depth> 4)
+
+   while (q_size.length < q_count){
+
+      var nanc = []
+      var n_children = []
+      while ((nanc.length <1)| (n_children.length <1)){
+         // random pick first node
+         var n1 =  nav_to[parseInt(rand() * nav_to.length)]
+
+         // pick an ancestor, at least two levels away,
+         // but not in the first two levels
+         nanc = n1.ancestors().filter((d)=> (d.depth < n1.depth-1) & (d.depth >1))
+         var pick_rnd = parseInt(rand()*(nanc.length-1))+1
+         var n_ancestor = nanc[pick_rnd]
+
+         var n_children = []
+         n_ancestor.children.forEach((child) => {
+            if(child!= nanc[pick_rnd-1]){ child.descendants().forEach((descendant)=>{
+                n_children.push(descendant)})
+             };
+             })
+         //console.log(n1.data.name, nanc.data.name, nanc, n_ancestor, nanc[pick_rnd-1])
+         // now pick a child ... make sure it's not in the same branch
+         //n_children = n_ancestor.descendants().filter((d)=>(n1.ancestors().indexOf(d)==-1))
+
+         // repeat until a valid ancestor and child have been found
+      }
+      var n2 = n_children[parseInt(rand()*(n_children.length))]
+
+      q = {class: "commonAncestor",
+              id: q_size.length+1,
+              nodes: 1,
+              helpers: [n1.id, n2.id],
+              question: "<br>What is the <b>common ancestor</b> of the nodes<ul><li><b>A: '"+ n1.data.name+ "'</b>, and </li><li> <b>B:    '"  + n2.data.name + "</b>?</li></ul>",
+              expected:[n_ancestor.id, n_ancestor.data.name]}
+         //console.log(n1.id, n1, q)
+         q_size.push(q)
+      }
+
+      return (q_size)
+}
+
+
+function randomExploreQuestion(seed, q_count){
+   if(typeof thelist=='undefined') return
+   if (typeof seed =='undefined') seed = 123
+   if (typeof q_count =='undefined') q_count = 10
+   var rand = mulberry32(seed)
+   var q_size = []
+   var nav_to = thelist.filter((d)=> d.depth> 3)
+
+   while (q_size.length < q_count){
+
+      //var n1 =  nav_to[parseInt(rand() * nav_to.length)]
+      // check that this is a unique node
+      var duplicates = [1,2]
+      while (duplicates.length> 1){
+         var n1 =  nav_to[parseInt(rand() * nav_to.length)]
+         var duplicates = nav_to.filter((d)=> d.data.name == n1.data.name)
+      }
+
+      // find a random ancestor ...
+      var n2 = n1.ancestors()
+
+
+
+      // find a random ancestor ...
+      var n2 = n1.ancestors()
+
+      // var descendant_count = root.descendants().length;
+      // console.log("COUNT ...", descendant_count)
+      // while (descendant_count > 100){
+         // pick a random node from the list of ascendanta
+      var parent = n2.slice(1,n2.length-2)[parseInt(rand()*(n2.length-3))]
+      // descendant_count = parent.descendants().length
+      // console.log(parent, n2, n2.length-3, descendant_count)
+      // }
+      var conditions = []
+      //conditions.push('at Level ' + (n1.depth + 1) +  ' of the hierarchy')
+      if (n1.children) {
+            conditions.push('has ' + n1.children.length + ' children')
+         } else {
+            conditions.push('is a leaf node')
+         }
+      j = 1
+      var start_letters = n1.data.name.toLowerCase().slice(0,1)
+      // check that this is a unique node, else add letters to hint
+
+
+
+      function poss_answers(num_letters) {
+      return  n2[2].descendants().filter(function(f) {
+         return (f.data.name.slice(0,j).toLowerCase() == start_letters)  &
+         ((n1.children ? n1.children.length: 0) == (f.children ? f.children.length :0))
+         })
+      }
+      var poss = poss_answers()
+      while ((poss.length > 1)) {
+         j++
+         start_letters = n1.data.name.toLowerCase().slice(0,j)
+         poss = poss_answers()
+      }
+      var warning = poss.length > 1 ? 'duplicate answers' : ''
+      conditions.push("starts with the letter(s) '" + n1.data.name.slice(0,j)+"'" + warning)
+
+
+      //console.log(conditions, shuffle(conditions))
+      var q_req = (conditions)
+      var np = ''
+      for(var j = 0; j< q_req.length; j++){
+         np += '<li>'+ q_req[j] + '</li>'
+      }
+      q = {class: "explore",
+           id: q_size.length+1,
+           nodes: 1,
+           helpers: [n2[n2.length-3].id],
+           question: "<br>Explore the hierarchy to find and a tag a node which  belongs to the category <b>'"+ n2[n2.length-3].data.name+ "'</b>, and is a <b>grandchild</b> of  <b>'"  + n2[2].data.name + "'</b>, having the following characteristics <ul>"+ np + "</ul>",
+           expected: [n1.id, n1.data.name, n1.depth]}
+      //console.log(n1.id, n1, q)
+      q_size.push(q)
+   }
+   return (q_size)
+}
+
+var evaluating = false
+window.onbeforeunload = function() {
+   if(evaluating){
+  return "Are you sure you want to navigate away?";}
 }
 
 
@@ -1384,6 +1681,43 @@ function mulberry32(a) {
       t ^= t + Math.imul(t ^ t >>> 7, t | 61);
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
+}
+
+var question_types = {1: {name: 'Evaluation - Size Comparison',
+                         q:randomSizeQuestion},
+                     2:{name:'Evaluation-Nav',
+                        q:randomNavQuestion},
+                     3:{name:'Evaluation-Explore',
+                        q:randomExploreQuestion},
+                     4:{name:'Evaluation-Relation',
+                        q:randomTwoNodeRelation},
+                     5:{name:'Evaluation-Ancestor',
+                        q:randomCommonAncestor},
+                     6:{name:'Evaluation-Count',
+                     q:randomCountQuestion}
+                  }
+
+
+function random_all(theseed){
+   if (typeof theseed =='undefined') theseed = 123
+   var rand = mulberry32(theseed)
+   var q_set = []
+   for(var i=0; i< 2;i++){
+
+      var pickfrom = shuffle([1,2,3,4,5,6], (+rand()*1000).toFixed(0))
+
+
+   while(pickfrom.length>0){
+      var qtype = pickfrom.pop()
+      //var qseed = (rand()*1000).toFixed(0)
+      var q_rand = +(rand()*1000).toFixed(0)
+      console.log(typeof q_rand, typeof qtype)
+      var qs = question_types[qtype.toString()].q(q_rand,1)
+      qs[0].id = q_set.length+1
+      q_set.push(qs[0])
+      }
+   }
+   return q_set
 }
 
 
@@ -1400,3 +1734,303 @@ function randomSize(node,seed) {
    }
    return node
 }
+
+
+//---------------------------------------------------
+// Logging Functions
+// --------------------------------------------------
+
+function logEvent(action, target, e, theComment) {
+   // e = event
+   theComment = theComment || ''
+   var cNode = '', pNode = '', mouseX = 0, mouseY = 0
+   if (e){
+      mouseX = e.clientX
+      mouseY = e.clientY
+   }
+   if (currentNode != '') {
+      cNode = currentNode.data.name
+   }
+   if (prevNode != '') {
+      pNode = prevNode.data.name
+   }
+
+   bodyJSON = JSON.stringify({comment:theComment, logTime: new Date(), vis: vis, action: action, target: target, currentNode: cNode, prevNode: pNode,  x: mouseX, y: mouseY })
+
+   mongoPost(bodyJSON)
+}
+
+
+function question_log(){
+   if (q_index < 0) return
+   q_info.time_end = Date.now()
+   q_info.time_elapsed = (q_info.time_end-q_info.time_start)/1000 || 0
+   console.log("logging last question", q_info, tagged)
+   //logEvent(action, target, e, theComment)
+   bodyJSON = JSON.stringify({action: 'eval', comment:q_info, logTime: q_info.time_end, vis: vis, eval_num: eval_num, viewmode: viewmode })
+   mongoPost(bodyJSON)
+}
+
+
+
+function mongoPost(log_this){
+    fetch('/log', {
+      method: 'PUT',
+      body: log_this,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(function(response) {
+        if(response.ok) {
+          console.log('MongoDB logged');
+          return;
+        }
+        throw new Error('Request failed. No mongo!', bodyJSON);
+      })
+      .catch(function(error) {
+      console.log(error);
+      });
+  };
+
+var return_data = []
+function mongoGet(sql){
+
+    fetch('/get', {something:sql})
+      .then(response => response.json())
+      .then(data => {
+
+         console.log('data is', data)
+         return_data =  data
+      })
+      .catch(error => console.log('error is', error));
+
+  };
+
+
+
+
+
+
+//console.log("Loaded Questions")
+
+//----------------------------------------------------------------------------
+// REPORTS
+//----------------------------------------------------------------------------
+
+var reportMode = 'front_page'
+
+function setupReport(){
+   d3.select("#chart").classed("d-none", true)
+   d3.select("#sidebar").classed("d-none", true)
+   d3.select("#content").append("div")
+                  .attr("class","div_text")
+                  .attr("id", "report_div")
+   d3.select("#report_div").append("div")
+                  .attr("class","modal-header")
+                  .attr("id", "header_div")
+                  .append('h5')
+                  .attr("class","modal-title").text("Task Evaluation - Questions")
+   d3.select("#report_div").append('p')
+   d3.select("#report_div").append("div")
+                  .attr("id","q_table")
+
+   d3.select("#header_div").append('button')
+         .attr("id","btn-close")
+         .attr("class","close")
+         .attr("type","button")
+         .attr("aria-label","close")
+        .on("click",  ()=> {
+          console.log("selected header --> front_page")
+          reportMode = 'front_page'
+          data_pipeline(pipeline1())
+       })
+        .append("span").attr("aria-hidden","true").text("x")
+  data_pipeline(pipeline1())
+}
+
+
+//d3.json('../data/questions.json').then(function(data) {
+//  data = data.category_questions
+	// render the table(s)
+//tabulate(data, ['id', 'class', 'question']);
+
+//});
+var views = {
+    'front_page': {
+      'colheads':
+            ['eval_num', 'viewmode', 'vis', 'Evaluation_Time', 'completed_questions','total_time'],
+      'header':'Task Evaluation - Completed Evaluations'},
+   'eval': {
+      'colheads':
+            ['eval_num','q_num', 'question', 'answer','correct','time', 'mouseclicks'],
+      'header':'Task Evaluation - Results',
+      },
+   'mouseclicks':{
+       'colheads':
+            ['eval', 'event','name','time','x_domain','y_domain','zoom'],
+       'header':'Task Evaluation - Mouseclicks'},
+    'selectedVis':'x'}
+
+function makeReport(data){
+            switch (reportMode){
+               case 'front_page':
+                  data.results.forEach((d)=> {
+                  d.Evaluation_Time = formatDate(d.time)
+                  d.total_time = d.total_time.toFixed(2)
+               })
+                break;
+
+              case 'eval':
+                data.results.forEach((d)=> {
+                   d.q_num = d.comment.qnum
+                   d.question = d.comment.question
+                   d.answer = 'Answer: ' + d.comment.answer_given
+                    + '<br><br>Expected: ' + d.comment.answer_expected
+                   d.correct = (d.comment.answer_given[0]==d.comment.answer_expected[0])
+                   d.time = d.comment.time_elapsed
+                   d.mouseclicks = d.comment.mouseclicks.length
+               })
+               //tabulate(data.results, views.col_heads[reportMode])
+               break;
+               case 'mouseclicks':
+
+               data = data.results[0].comment.mouseclicks
+               tabulate(data, views[reportMode].colheads)
+               return
+            }
+
+            tabulate(data.results, views[reportMode].colheads)
+
+}
+
+
+function tabulate(data, columns) {
+      d3.select('#q_table').selectAll("#results").remove()
+		var table = d3.select('#q_table').append('table')
+                     .attr("class","table table-hover table_results")
+                     .attr("id","results")
+		var thead = table.append('thead')
+		var tbody = table.append('tbody');
+
+		// append the header row
+		thead.append('tr')
+        .attr("scope","col")
+        .attr("class","table-primary")
+		  .selectAll('th')
+		  .data(columns).enter()
+		  .append('th')
+		    .text(function (column) { return column.toUpperCase(); })
+          .on("click",  ()=> {
+             console.log("selected header --> front_page")
+             reportMode = 'front_page'
+             data_pipeline(pipeline1())
+          });
+
+		// create a row for each object in the data
+		var rows = tbody.selectAll('tr')
+		  .data(data)
+		  .enter()
+		  .append('tr');
+
+		// create a cell in each row for each column
+		var cells = rows.selectAll('td')
+		  .data(function (row) {
+		    return columns.map(function (column) {
+		      return {column: column, row:row, value: row[column]};
+		    });
+		  })
+		  .enter()
+		  .append('td')
+		    .html(function (d) { return d.value; })
+          .on("click", (d,i) => {
+             console.log("current", reportMode, i, d.row.q_num, d.row.eval_num)
+            // p = make_params()
+             switch (reportMode){
+             case 'front_page':
+                //console.log("front_page --> eval", p)
+                views.selectedVis = '<tr><td>Visualisation Type:</td><td> <b>'+d.row.vis + '</b></td></tr><tr><td>Evaluation Type:</td><td><b>' + d.row.viewmode + '</b></td></tr>'
+                data_pipeline(pipeline2(d.row.eval_num))
+             break;
+             case 'eval':
+             if(i==1){
+                  //console.log("eval--> front_page", p)
+                  data_pipeline(pipeline1())
+               } else {
+                  //console.log("eval --> mouseclicks")
+                  data_pipeline(pipeline3(d.row.eval_num, d.row.q_num))
+               }
+             break;
+             case 'mouseclicks':
+              //console.log("mouseclicks--> eval", p)
+               data_pipeline(pipeline2(d.row.eval))
+             break;
+           }
+          })
+
+	  return table;
+	}
+
+
+
+
+// Aggregated front page data
+function pipeline1(){
+   reportMode = 'front_page'
+   d3.select("#main_div").select("h5").html(views[reportMode].header)
+   d3.select("#main_div").select("p").html('')
+   d3.select("#btn-close").classed("d-none",true)
+   return  {match:
+                     {$match: {action: "eval"}},
+                  query: {$group:
+                              {_id: "$eval_num",
+               completed_questions: {$sum:1},
+                  eval_num: {$first: "$eval_num"},
+                              time: {$first:"$logTime"},
+                        total_time: {$sum:"$comment.time_elapsed"},
+                               vis: {$first:"$vis"},
+                          viewmode: {$first: "$viewmode"}
+                       }},
+                sort: {$sort: {_id:-1}},
+                limit: {$limit: 20}};
+    }
+
+function pipeline2(_evalnum){  // evaluations
+   reportMode = 'eval'
+   d3.select("#main_div").select("h5").html(views[reportMode].header)
+   d3.select("#main_div").select("p").html('<table><tr><td>Evaluation number:</td><td><b>'+_evalnum+'</b></td>'+ views.selectedVis +'</table>')
+    d3.select("#btn-close").classed("d-none", false)
+   console.log("pipeline2", _evalnum)
+   return {match:
+            {$match: {action: "eval",
+                      eval_num: _evalnum
+                    }}}
+                 }
+
+
+
+function pipeline3(_evalnum, qnum){  // mouseclicks
+   reportMode = 'mouseclicks'
+   d3.select("#main_div").select("h5").html(views[reportMode].header)
+   d3.select("#main_div").select("p").html('<table><tr><td>Evaluation number:</td><td><b>'+_evalnum+'</b></td>'+ views.selectedVis + '<tr><td> Question:</td><td><b>' + qnum + '</b></td></table>')
+   console.log("pipeline3", _evalnum, qnum)
+   return {match:
+            {$match: {action: "eval",
+                      eval_num: _evalnum,
+                      "comment.qnum": qnum}}}
+                   }
+
+
+function data_pipeline(param){
+   //var inputDate = new Date(myDate.toISOString());
+   console.log([param])
+   fetch('/agg/'+JSON.stringify(param))
+   .then(response => response.json())
+   .then(data => {
+      console.log('data is', data, data.length)
+      makeReport(data)
+   })
+   }
+
+data_pipeline(pipeline1())

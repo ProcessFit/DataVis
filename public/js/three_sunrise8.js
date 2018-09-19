@@ -40,6 +40,9 @@ var  x = d3.scaleLinear().domain([0,partition_h])
      rads2 = d3.scaleLinear().domain([0,partition_h])
                         .range([-Math.PI/2,Math.PI/2])
                          .clamp(true),
+     xScaleFull = d3.scaleLinear()
+                   .domain([0,partition_w])
+                   .range([0,partition_w]),
     barOpacity = d3.scaleLinear()
                          .domain([1,0])
                          .range([0,0.5])
@@ -54,11 +57,14 @@ var  data = {},
      all_labels = [],
      nodes_flat = [],
      currentNode = '',
+     current_zoom_node = '',
      prevNode = '',
      selected_nodes = [],
      comparator = compareByCategory,
-     vis = "IciclePlot",
+     vis = "Sundown",
      update_duration = 200;
+
+
 
 
 // Initial sizing of all nodes
@@ -116,14 +122,14 @@ var context = svg.append("g")
 var fillBars_group = svg.append("g")
     .attr("id", "fillBars")
 
-var label_group = svg.append("g")
-    .attr("id", "labels")
 
 var context_arc_group = context.append("g")
                  .attr("class", "context_arc")
 
 var context_handles = context.append("g")
                  .attr("class", "context_handles")
+var context_text = context.append("g")
+                           .attr("id","scale")
 
 
 var context_group = context.append("g")
@@ -135,6 +141,49 @@ var rect_zoom = svg.append("rect") // zoom rectangle covers large portion only
                  .attr("width", width)
                  .attr("height", height)
                  .attr("transform", "translate(0," + view_offset + ")")
+
+var labels_group = svg.append("g")
+    .attr("id", "labels")
+
+var arc_select_tagged = svg.append("g")
+      .attr("id","arc_select_tagged")
+
+var visOptions = {
+   'animate':
+      {'id': 'animate',
+       'value':true,
+       'label': 'Animate',
+       'type':'check'},
+    'showrange':
+          {'id':'showrange',
+           'value':true,
+           'label': 'Absolute/Relative range (axis)',
+           'type':'check'},
+    'outline':
+      {'id': 'outline',
+       'value':true,
+       'label': 'Outline selected node',
+       'type':'check'},
+    'context_pct':
+      {'label':'Context Size:',
+      'type': 'slider',
+      'id': 'context_pct',
+      'min':0,
+      'max':50,
+      'step': 1,
+      'value': context_pct*100 },
+    'tooltips':
+         {'id': 'tooltips',
+         'label':'Show full tooltip',
+         'type': 'check',
+         'value': false}
+    }
+var opts = []
+for (var key in visOptions){
+  opts.push(visOptions[key]);
+}
+
+
 
 //--------------------------------------------------------------
 // BRUSH and ZOOM
@@ -154,6 +203,7 @@ var zoom = d3.zoom()
 var drag = d3.drag()
              .on("start", dragStarted)
       	    .on("drag", dragged)
+             .on("end", dragEnded)
 
 
 function addBrush(){
@@ -204,17 +254,22 @@ function reScale() {
        x2.range([0,height]);
        y.range([0,height]);
        y2.range([0,height]);
+       fullScale = root.value*(x.domain()[1] - x.domain()[0])/x2.domain()[1]
+       xScaleFull.range([0,partition_w])
+                 .domain([0,root.value])
        d3.select("#canvas_container").style("top",view_offset + "px").style("left",(margin+(width1-width)/2)+"px")
        d3.select("#canvas_container2").style("left",(margin+width/2-context_pct*width*0.8/2 +(width1-width)/2)+"px")
        fillBars_group.attr("transform",
+               "translate("+(width1/2+margin)+","+(view_offset) +")")
+       arc_select_tagged.attr("transform",
                "translate("+(width1/2+margin)+","+(view_offset) +")")
        context_arc_group.attr("transform",
                        "translate("+(width1/2+margin )+",0)")
        context_handles.attr("transform",
                        "translate("+(width1/2+margin)+",0)")
-       label_group.attr("transform",
+       labels_group.attr("transform",
                "translate("+(width1/2+margin)+","+(view_offset) +")")
-       drawLabels()
+       doUpdates()
        console.log("reScale:", x.domain(), y.domain(), y2.domain())
 } // re-scale
 
@@ -228,7 +283,16 @@ datafiles = ['../js/file.json','../data/chibrowseoff.json', '../js/animalia.json
 d3.json(datafiles[1]).then(function(data) {
 
     // Data preparation
-    root = d3.hierarchy(data).sum((d) => d.size)
+
+   root = d3.hierarchy(data).sum((d)=> d.size)
+   var rand = mulberry32(100)
+   root.descendants().forEach(function(d,i){
+       if (typeof d.children=='undefined') {
+          d.data.v =  ((rand()*40).toFixed(2)+1)
+        }
+     })
+    root.sum((d)=> d.v)
+    current_zoom_node = root
     currentNode = root
     prevNode = root
 
@@ -261,7 +325,7 @@ d3.json(datafiles[1]).then(function(data) {
  var camera, scene, renderer, scene2;
  var objects = [];
  var mesh, mesh_line, mesh_context, mesh_line_context, mesh_highlight, innerCircles //, p1, p2;
- var zoom_x = 1, position_x = 0
+ var zoom_x = 1, zx = 1, position_x = 0
  var view, arrow
  var raycaster = new THREE.Raycaster();
  var mouse = new THREE.Vector2(), INTERSECTED;
@@ -595,7 +659,7 @@ function updateMorphs(minR,maxR){
   //console.log("UpdateMorphs: " + (t1 - t0).toFixed(2) + " ms.", targets.length, mesh.geometry.vertices.length)
   //checkReplace()
   render()
-  drawLabels()
+  doUpdates()
 }
 
 //--------------------------------------------------------------
@@ -726,7 +790,17 @@ function pctDisplayed(d) {
    return (d3.min([rads.domain()[1],d.x1]) - d3.max([rads.domain()[0],d.x0]))/(d.x1- d.x0)
 }
 
+function doUpdates(){
+   drawLabels()
+   //zoomRect()
+   tagNodes()
 
+}
+function fullUpdate(){
+   onWindowResize()
+   //zoomRect()
+   tagNodes()
+}
 
 
 // path generator for arcs (uses polar coordinates)
@@ -801,22 +875,32 @@ function makePointerLine(d){
 
 function domainData(){
    // convert the current radial domain to x,y coords for context view
-   thedata = []
-   radius = context_pct * 0.8 * ((root.height+2) * barheight)
+   var thedata = []
+   var radius = context_pct * 0.8 * ((root.height+2) * barheight)
    rads.domain().forEach(function(d) {
             thedata.push({ 'r': radius,
                         'x': x(radius * Math.cos(-rads2(d)+Math.PI/2)),
-                        'y': x(radius * Math.sin(-rads2(d)+Math.PI/2))})
+                        'y': x(radius * Math.sin(-rads2(d)+Math.PI/2)),
+                        'dom':d})
                      })
+   var midpt = (rads.domain()[0]+rads.domain()[1])/2
+   radius +=25
+   thedata.push({'r':radius,
+                 'x': x(radius * Math.cos(-rads2(midpt)+Math.PI/2)),
+                 'y': x(radius * Math.sin(-rads2(midpt)+Math.PI/2)),
+                 'dom':xScaleFull.invert(rads.domain()[1]-rads.domain()[0])})
 
   return thedata
 }
 
 
-function ctxtHandles(){
 
+
+
+function ctxtHandles(){
+   var dData = domainData().slice(0,2)
    contextHandles = context_handles.selectAll("path")
-      .data(domainData())
+      .data(dData)
 
    contextHandles.enter().append("path")
       .attr("id", function(d,i) {return "contextHandleP"+i})
@@ -830,7 +914,7 @@ function ctxtHandles(){
 
 
    contextHandlesCircle = context_handles.selectAll("circle")
-      .data(domainData())
+      .data(dData)
 
    contextHandlesCircle.enter().append("circle")
       .attr("id", function(d,i) {return "contextHandle"+i   })
@@ -844,10 +928,21 @@ function ctxtHandles(){
   contextHandlesCircle.call(drag)
   contextHandlesCircle.exit().remove();
 
+  //console.log(domainData())
+
+  contextText = context_text.selectAll("text")
+                        .data(domainData().slice(2,3))
+  contextText.enter().append("text")
+             .attr("id",(d,i)=> "scale_"+i)
+             .attr("class","ticks")
+             //.attr("transform", (d) => "translate("+(width1/2+margin +d.x)+"," +(20+d.y) +")")
+             //.append("text")
+             //.html((d)=> d.x)
+             .style("text-anchor","middle")// (d,i) => i == 1? "start":"end")
+             .merge(contextText)
+             .attr("transform", (d,i) => "translate("+(width1/2+margin +d.x)+"," +(d.y) +")")
+             .html((d)=> d.dom.toFixed(2))
 }
-
-
-
 
 
 function textPos(d){
@@ -861,36 +956,53 @@ function textPos(d){
       }
 
 function drawLabels() {
-  labels =  label_group.selectAll("text")
+  labels =  labels_group.selectAll("text")
       .data(nodelist_radial(20), function(d) {return d.id})
   var np = nodePartials()
-  console.log(np)
+  //console.log(np)
   labels.enter().append("text")
       .attr("id", function(d) { return 'node_'+d.id; })
       //.attr("dy", ".35em")
       .attr("opacity",0)
+      .attr("class","vislabel_w")
       .attr("transform", function(d) {return textPos(d)})
+      .on("mousemove", function(d) {
+         currentNode = d
+         d3.select(this)
+            .classed("highlight",true)
+            .html(function(d){
+               //var t = label_text(d)
+               t = d.data.name
+               return t
+            })
+         })
+      .on("mouseout", function(d) {
+               d3.select(this)
+                  .classed("highlight",false)
+               .html((d) => labelText(d,np))
+            })
+      .on("click", function(d) {
+
+            currentNode = d
+            zoomSource = "label"
+            zoomTo(d)
+            // label_click(d)
+                  })
+
       .merge(labels)
-      .attr("class", function(d) {
-         if (selected_nodes.includes(d)) {
-            return "vislabel selected"
-         } else {
-            return "vislabel"
-         }}
-      )
+      // .attr("class", function(d) {
+      //    if (selected_nodes.includes(d)) {
+      //       return "vislabel selected"
+      //    } else {
+      //       return "vislabel"
+      //    }}
+      // )
       //.transition()
       //.duration(200)
          //.attr("opacity",0.1)
          .attr("transform", function(d) {return textPos(d)})
          .html(function(d) {
-            sweep = rads(d.x1) - rads(d.x0)
-            length = d==root ? x(barheight*4) : x(2*(d.depth+1)*barheight * Math.sin(sweep/2))
-
-            var showLimit = np.indexOf(d) >-1 ? 11:9
-            var text_length = Math.floor(length /showLimit)
-            var preAdd = d.x0< rads.domain()[0] ? 	'&#8606;':''
-            var postAdd = d.x1> rads.domain()[1] ? '&#8608;':''
-            return preAdd +  d.data.name.slice(0,Math.max(0,text_length))+postAdd})
+            return labelText(d,np) })
          .transition()
          .duration(100)
          .attr("opacity",1)
@@ -898,6 +1010,15 @@ function drawLabels() {
    drawfillBars()
 }; //drawLabels
 
+function labelText(d, partials){
+   var sweep = rads(d.x1) - rads(d.x0)
+   var length = d==root ? x(barheight*4) : x(2*(d.depth+1)*barheight * Math.sin(sweep/2))
+   var showLimit = partials.indexOf(d) >-1 ? 11:9
+   var text_length = Math.floor(length /showLimit)
+   var preAdd = d.x0< rads.domain()[0] ? 	'&#8606;':''
+   var postAdd = d.x1> rads.domain()[1] ? '&#8608;':''
+   return preAdd +  d.data.name.slice(0,Math.max(0,text_length))+postAdd
+}
 //--------------------------------------------------------------
 // TWEEN FUNCTIONS
 // -------------------------------------------------------------
@@ -921,9 +1042,21 @@ function makeTween_radial(){
 } // makeTween
 
 
-function zoomTo(coords) {
-       tgt_min = coords[0]
-       tgt_max = coords[1]
+function zoomTo(d) {
+   if (!d.children) {
+      d = d.parent
+      selected_level = d.depth+1
+   }
+   current_zoom_node = d
+   if (typeof zoomSource=='undefined') zoomSource = 'x'
+   zoomToCoords([d.x0, d.x1])
+   zoom_x = 1000/ (d.x1-d.x0)
+   log_mouse("select_"+zoomSource,[d.x0, d.x1])
+}
+
+function zoomToCoords(coords) {
+       var tgt_min = coords[0]
+       var tgt_max = coords[1]
 
        tween_current = {min_value: rads.domain()[0],
                         max_value: rads.domain()[1]}
@@ -933,10 +1066,10 @@ function zoomTo(coords) {
 
     makeTween_radial()
 
-    t = d3.timer(function(elapsed) {
+    var timer_t = d3.timer(function(elapsed) {
            TWEEN.update();
            if (elapsed > 2*tweenTime){
-           t.stop()
+           timer_t.stop()
            }
           renderer.render(scene, camera);
      });
@@ -964,7 +1097,7 @@ function onWindowResize() {
       mesh_context_group.scale.y  =  context_pct*0.8
       camera.updateProjectionMatrix();
       addBrush()
-      drawLabels()
+      doUpdates()
 }
 
 
@@ -983,22 +1116,21 @@ function zoomed() {
   tooltip.style("display","none")
   var t = d3.event.transform;
 
-  old_zoom = zoom_x
-  zoom_x = t.k;
+  var old_zoom = zx
+  zx = t.k;
 
-  x1_ = rads.domain()[1]
-  x0_ = rads.domain()[0]
-  m = (mouseTrack.x - d3.mouse(this)[0])
-  deltaT = 0
-  deltaZ = 0
-
-  if (old_zoom != zoom_x) {
-     deltaZ = ((x1_ - x0_)*(old_zoom/zoom_x-1))/4
+  var x1_ = rads.domain()[1]
+  var x0_ = rads.domain()[0]
+  var m = (mouseTrack.x - d3.mouse(this)[0])
+  var deltaT = 0
+  var deltaZ = 0
+  zoom_x = rads2.domain()[1]/(x1_-x0_)
+  if (old_zoom != zx) {
+      deltaZ = ((x1_ - x0_)*(old_zoom/zx-1))/4
   } else if (m != 0) {
-        z = rads2.domain()[1]/(x1_-x0_)
-        deltaT = 2*x2.invert(m)/z
+         deltaT = 2*x2.invert(m)/zoom_x
  }
-
+  console.log("zoom", zx, zoom_x)
   //console.log("zoomStart", rads.domain(), zoom_x == old_zoom, m, deltaT, deltaZ,x0_-deltaZ+deltaT, x1_+deltaZ+deltaT)
   minRad = d3.min([rads.domain()[0],rads2.invert(rads2(x0_-deltaZ+deltaT))])
   maxRad = d3.max([rads.domain()[1],rads2.invert(rads2(x1_+deltaZ+deltaT))])
@@ -1020,25 +1152,6 @@ function zoomed() {
 }
 
 
-// function brushed() {
-//    console.log("brushed")
-//    //return
-//   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
-//   //if (d3.event.sourceEvent) console.log(d3.event.sourceEvent.type);
-//
-//   var s = d3.event.selection || x2.range();
-//   console.log("brushed", s)
-//   //x.domain(s.map(x2.invert));
-//   //y.domain(s.map(y2.invert));
-//   //zoom_x = width / (s[1]-s[0])
-//   // update the zoom and translate settings associated with zoom area
-//   //rect_zoom.call(zoom.transform, d3.zoomIdentity
-//   //    .scale(zoom_x)
-//   //    .translate(-s[0], +s[1]));
-//
-//   //updateGL()  // update graphics layer
-//   //drawLabels()
-// }
 
 function dragStarted() {
    if (!d3.event) return
@@ -1075,18 +1188,25 @@ function dragged() {
         rads.domain([d3.min([rads2.invert(alpha0),rads2.invert(alpha1)]),
                         d3.max([rads2.invert(alpha0),rads2.invert(alpha1)])]);
         updateMorphs(d3.min([x0_,rads.domain()[0]]),d3.max([x1_,rads.domain()[1]]))
+
 } // dragged
 
+function dragEnded(){
+      console.log("--> Dragged")
+      currentNode = current_zoom_node
+      log_mouse("context_brush", rads.domain())
+}
 
-function brushended(){
-    return
-    if (!d3.event.sourceEvent) return; // Only transition after input.
-    drawLabels()
-    if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
-    //console.log("brushended2", update_duration, d3.event.sourceEvent  )
-    update_mesh(zoom_x)
-
- };
+// function brushended(){
+//
+//     return
+//     if (!d3.event.sourceEvent) return; // Only transition after input.
+//     doUpdates()
+//     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
+//     //console.log("brushended2", update_duration, d3.event.sourceEvent  )
+//     update_mesh(zoom_x)
+//
+//  };
 
 
 function zoomended(){
@@ -1105,10 +1225,21 @@ function zoomended(){
             //if (d.depth < morphDepth){resetInnerRings(morphDepth)}
             //morphDepth = d.depth
             //console.log("selected", morphDepth, d)
-             zoomTo([d.x0, d.x1])
+             zoomSource = "click"
+             zoomTo(d)
+
+            // if (!d3.event.sourceEvent) {log_mouse("clicked", root,[x.domain()[0], x.domain()[1]])}
          }
-        }
+      } else {
+         currentNode = current_zoom_node
+         console.log("--> Panned", d3.event.sourceEvent)
+         log_mouse("pan", rads.domain())
+      }
+
      } else {
+     currentNode = current_zoom_node
+     console.log("--> Zoomed", d3.event.sourceEvent)
+     if (!d3.event.sourceEvent) {log_mouse("zoom"), rads.domain()}
      //update_mesh(zoom_x)
   }
   };
@@ -1129,19 +1260,19 @@ function getIntersect() {
    check = elementsAt(mouseDoc.x, mouseDoc.y);
    if (check.length>1) {
       d = d3.select("#"+check[1].id).datum()
+      currentNode = d
       return d}
    else if(intersects_inner[0]) { // intersects with inner circle
       d =thelist[intersects_inner[0].object.name]
+      currentNode = d
       return d
    } else if (intersects[0]) { // intersects main_mesh
       d =thelist[face_id[intersects[0].faceIndex]]
+      currentNode = d
       return d
-   // } else if (intersects_context[0]) { // intersects context view
-   //    d =thelist[face_id[intersects_context[0].faceIndex]]
-   //    console.log("Found Context View", d)
-   //    return d
-    }else {
 
+    }else {
+      currentNode = null
       return
    }
 }
@@ -1152,6 +1283,7 @@ function onMousemove() {
      mouseDoc = {x: d3.event.x, y: d3.event.y}
      d = getIntersect()
      if(d){
+        currentNode = d
         set_tooltip(d)
      } else {
         tooltip.style("display","none")
@@ -1218,8 +1350,8 @@ d3.select("#searchbox")
          .on("click", function(){
            setTimeout(function(){$('.typeahead').typeahead('val', ''); }, 500);
            selected_nodes=[]
-           drawLabels()
-           zoomTo([0,partition_w])
+           doUpdates()
+           zoomToCoords([0,partition_w])
            d3.select(this).style("display","none")
          })
          .append("span").attr("class","glyphicon glyphicon-remove")
@@ -1262,7 +1394,7 @@ function doSearch(searchFor) {
       zoomrange[1] = d3.max(selected_nodes, function(d) {
                            return +d.x1;})
       console.log(selected_nodes, zoomrange)
-      zoomTo([zoomrange[0], zoomrange[1]])
+      zoomToCoords([zoomrange[0], zoomrange[1]])
 };
 
 
@@ -1326,4 +1458,70 @@ var elementsAt = function( x, y ){
        elm.style.display = '';
     });
     return elements;
+}
+
+function tagNodes_arcs() {
+
+   // rotate values is 1 or -1 ... right: 30 or left: -30
+  tagBars = arc_select_tagged.selectAll("path")
+      .data(tagged, function(d) {return d.id})
+  tagBars.enter().append("path")
+      .attr("id", function(d) { return 'tag_bar_'+d.id; })
+      .attr("class", "rect_tagged")
+      .attr("d", (d)=> viewArc(d))
+      .on("mouseover", function(d) {
+          currentNode = d
+          d3.select(this)
+             .classed("highlight",true)
+     })
+     .on("mouseout", function(d) {
+              d3.select(this)
+              .classed("highlight",false)
+           })
+     .on("click", function(d) {
+           console.log("tagged_rect")
+           zoomSource = "tagged_node"
+           zoomTo(d)
+        })
+      .merge(tagBars)
+      .attr("d", (d)=> viewArc(d))
+      //.attr("fill", (d)=> d.color)
+
+   tagBars.exit().remove();
+   //drawContextArc()
+
+
+
+   var g = d3.select("#tags")
+        .selectAll("div")
+        .data(tagged);
+   // Add breadcrumb and label for entering nodes.
+   var entering = g.enter().append("div")
+         .attr("id", (d)=> "tag"+d.id)
+         .attr("class", "list-group-item")
+         .merge(g)
+         .style("padding", "4px")
+         .style("background-color", (d)=> d.color)
+         .text(function(d) {
+            return  d.data.name})
+         .on("click", function(d) {
+             console.log("textclick")
+             zoomSource = "tagged_text"
+             zoomTo(d)
+         })
+         .append("button")
+         .style("float", "right")
+         .text("x")
+         .on("click", function(d) {
+             tagged.splice(tagged.indexOf(d),1);
+             currentNode = d
+             log_mouse("un-tag_text", rads.domain())
+             tagNodes()
+             d3.event.stopPropagation()
+             if ((q_index > 0) && (tagged.length < questions[q_index].nodes*1)){
+                 d3.select("#submit-button").classed("disabled",true)
+              }
+
+                      })
+  g.exit().remove()
 }

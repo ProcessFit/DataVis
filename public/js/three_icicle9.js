@@ -318,6 +318,17 @@ d3.json(datafile).then(function(data) {
 
     // Data preparation
     root = d3.hierarchy(data).sum((d) => d.size)
+    var rand = mulberry32(100)
+   root.descendants().forEach(function(d,i){
+    if (typeof d.children=='undefined') {
+       d.data.v =  ((rand()*40).toFixed(2)+1)
+     }
+   d.data.name = d.data.name.replace(" 1","")
+   })
+   root.sum((d)=> d.v)
+
+
+
     current_zoom_node = root
     currentNode = root
     prevNode = root
@@ -566,7 +577,7 @@ function drawLabels() {
       .attr("opacity",0)
       .attr("transform", function(d) {return textPos(d)})
       .on("click", function(d) {
-            zoomSource = "labelClick"
+            zoomSource = "label"
             zoomTo(d)
                   })
       .on("mousemove", function(d) {
@@ -827,8 +838,11 @@ function brushended(){
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
     //console.log("brushended2", update_duration, d3.event.sourceEvent  )
     update_mesh(zoom_x)
+    log_mouse("context_brush")
 
  };
+
+
 
 function zoomRect(){
 
@@ -851,10 +865,12 @@ function zoomRect(){
 
 var zoomSouce;
 function zoomTo(d) {
-   if (!d.children) {
-      d = d.parent}
    current_zoom_node = d
-   log_mouse("zoomnode_"+zoomSource, d, [d.x0, d.x1])
+
+   if (!d.children) {
+      d = d.parent
+   }
+
    zoomToCoords([d.x0, d.x1])
 }
 
@@ -872,7 +888,7 @@ function zoomToCoords(coords){
    rect_zoom.call(zoom.transform, d3.zoomIdentity
        .scale(zoom_x)
        .translate(-x2(x0_), 0));
-
+   log_mouse("select_"+zoomSource,x.domain())
    tween_target = {scalex: zoom_x,
                      posx:  x.domain()[0],
                      posx1: x.domain()[1]} // * ((d.x0))
@@ -894,19 +910,19 @@ function zoomended(){
            current_zoom_node=d
            if (d) {
             zoomSource = "click"
-            log_mouse("zoomnode_"+zoomSource, d, [d.x0, d.x1])
+            log_mouse("select_"+zoomSource,[d.x0, d.x1])
             zoomToCoords([d.x0, d.x1])
             //selected_nodes = [d]
             //select_nodes()
          }
       } else {
          console.log("zoomstop")
-           log_mouse("panned", root,[x.domain()[0], x.domain()[1]])
+           log_mouse("pan")
       }
      } else {
      //if (Math.pow((zoomStart.x - d3.mouse(this)[0]),2)>4) {
         console.log("zoomended", d3.event.sourceEvent)
-        if (!d3.event.sourceEvent) {log_mouse("zoomed", root,[x.domain()[0], x.domain()[1]])}
+        if (!d3.event.sourceEvent) {log_mouse("zoom")}
      //}
      update_mesh(zoom_x)}
   };
