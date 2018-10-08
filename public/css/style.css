@@ -1,5 +1,5 @@
 body {
-  padding-top: 100px;
+  padding-top: 70px;
   padding-left: 40px;
   padding-right: 40px;
 }
@@ -18,7 +18,7 @@ h4 {
 }
 
 label {
-   font-size: 1rem;
+   font-size: 0.8rem;
 }
 
 
@@ -49,7 +49,7 @@ a {
 .zoom {
   cursor: move;
   fill: #ddd;
-  opacity: 0.1;
+  opacity: 0.0;
   pointer-events: all;
 }
 
@@ -68,7 +68,8 @@ a {
 
 
 .vislabel {
-  font: 13px sans-serif;
+  font-size: 0.85rem;
+  font: sans-serif;
   text-anchor: middle;
   pointer-events: none;
   opacity: 1;
@@ -81,18 +82,21 @@ a {
 }
 
 .vislabel_w {
-
-  font: 12px sans-serif;
+  font-size: 0.85rem;
+  font-family: sans-serif;
   text-anchor: middle;
+  font-weight:500;
+  pointer-events: none;
   fill: whitesmoke;
   z-index: 10;
   transition: fill 1200ms;
 }
 
 .vislabel_w.leaf {
-   font: 12px sans-serif !important;
+   font-size: 0.85rem !important;
+   font-family: sans-serif !important;
    fill: #FFF !important;
-   font-weight: 900 !important;
+   font-weight: 300 !important;
 }
 
 .vislabel_w.toplevel {
@@ -101,27 +105,30 @@ a {
 }
 
 .vislabel_w.selectednode {
-
-  font-weight: 100;
+  font-weight: 300;
   opacity:0.4;
 
 }
 
 .vislabel_w.selected {
-  font:20px sans-serif;
-  font-weight: 200;
+  font-size: 0.95rem;
+  font-family: sans-serif;
+  font-weight: 300;
   opacity:1;
 }
 
 .vislabel_w.highlight {
   transition: 300ms;
-  font: 14px sans-serif;
+  font-size: 0.95rem;
+  font-family: sans-serif;
   font-weight: bold;
   opacity:1;
+  margin-top:-5px;
 }
 
 text.clicked0 {
-  font: 15px sans-serif;
+  font-size: 0.87rem;
+  font-family: sans-serif;
   font-weight: bold;
   fill: dk-blue;
 
@@ -149,7 +156,7 @@ rect.viewbox {
    pointer-events: none;
    }
 
-rect.clicked0 {
+path.clicked0, rect.clicked0 {
    cursor: pointer;
    position: relative;
    pointer-events: none;
@@ -160,26 +167,29 @@ rect.clicked0 {
     fill: none;
     /*filter: url(#drop-shadow);*/
 }
-rect.rect_tagged {
+rect.rect_tagged, path.rect_tagged {
    cursor: pointer;
    position: relative;
     stroke:red !important;
-    stroke-width: 2;
+    stroke-width: 1.5;
     stroke-opacity: 1;
     z-index: 5;
     fill: none;
     /*filter: url(#drop-shadow);*/
 }
-path.rect_tagged {
-      cursor: pointer;
-      position: relative;
-       stroke:red !important;
-       stroke-width: 2;
-       stroke-opacity: 1;
-       z-index: 5;
-       fill: none;
-       /*filter: url(#drop-shadow);*/
+
+rect.rect_helper, path.rect_helper {
+   cursor: pointer;
+   position: relative;
+    stroke: #eaa5a5 !important;
+    stroke-width: 1.5;
+    stroke-opacity: 1;
+    z-index: 5;
+    fill: none;
+    /*filter: url(#drop-shadow);*/
 }
+
+
 
 rect.highlight {
     stroke-width: 4 !important;
@@ -313,6 +323,18 @@ rect.highlight {
 
 .ticks {
   font: 12px sans-serif;
+        -webkit-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
+}
+
+.tick {
+  font-size: 0.7rem;
+        -webkit-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
 }
 
 .track,
@@ -361,7 +383,23 @@ rect.handle{
   opacity:1;
 }
 
+circle.tagged{
+     fill: red;
+     stroke: black;
 
+}
+
+circle.highlight{
+     fill: red;
+     stroke: yellow;
+     stroke-width: 1.5;
+
+}
+
+circle.helper{
+     fill: #eaa5a5;
+     stroke: black;
+}
 
 img {
    width:100%;
@@ -425,8 +463,16 @@ div.div_container{
     margin-left: 0px;
     min-width: 100%;
     max-width: 100%;
-    padding: 50px 150px 50px 150px;
+    padding: 0px 150px 50px 150px;
 }
+
+#sidebar-content {
+    max-width: 800px;
+    margin-right: auto;
+    margin-bottom: 1.75rem;
+    margin-left: auto;
+}
+
 
 .table_results td{
    vertical-align: middle;

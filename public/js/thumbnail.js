@@ -37,7 +37,7 @@ function set_tooltip(d){
          .style("background-color", d.color)
    let html_str =
       "<table>"+
-      "<tr><td>ID: </td><td>" + Math.floor(intersects[0].faceIndex/2) + "  - "+ d.id+"</td></tr>"+
+      "<tr><td>ID: "+d.id+"</td></tr>"+
       "<tr><td>Value: </td><td>" + format_number(d.value) + "</td></tr>"+
       "<tr><td>Depth: </td><td>" + d.depth + "</td></tr>"
       if(d.parent) {
@@ -418,18 +418,22 @@ d3.select("body").on("keydown", function() {
         if (d3.event.keyCode==32) {
         event.preventDefault();
         //tagSelectedNode()
+        if (currentNode == null){return}
         d = currentNode
-        console.log("current", currentNode.data.name, tagged)
-
+        //console.log("current", currentNode)
+        //if (current_zoom_node == null){return}
+        //d = current_zoom_node
         if (d) {
              if (tagged.indexOf(d)==-1){
                 log_mouse('tag_key')
                 tagged.push(d)
+                d.tagged = true
             } else {
                console.log("popping",d)
                // remove from the list
                log_mouse('un-tag_key')
                tagged.splice( tagged.indexOf(d), 1 );
+               d.tagged = false
             }
         if(q_index>=0 ){
            var submit_ready = (tagged.length < questions[q_index].nodes*1)
@@ -437,7 +441,7 @@ d3.select("body").on("keydown", function() {
 
             d3.select("#submit-button").classed("disabled",submit_ready)
         }
-        tagNodes()
+        tagNodes(true)
         }
      } else if (d3.event.keyCode==88){ // 'X' for exclude
         if(typeof q_info != 'undefined'){
@@ -454,7 +458,7 @@ function tagSelectedNode(){
 // ---------------------------------------------
 // Create HTML for question and answer blocks
 
-var question_block = d3.select("#sidebar")
+var question_block = d3.select("#sidebar-content")
                   .append("div")
                   .attr("id","Evaluation")
                   .attr("class", "card border-primary mb-3")
@@ -481,7 +485,7 @@ question_block.append("div") // show helper nodes
                .html("<small>helper nodes:</small>")
 
 
-answer_block = d3.select("#sidebar")
+answer_block = d3.select("#sidebar-content")
                   .append("div")
                   .attr("id","answers")
                   .attr("class", "card border-primary mb-3")
@@ -519,7 +523,7 @@ d3.select("#answer").append("div")
 d3.select("#answer").append("fieldset") // Radio buttons
             .attr("class", "form-group")
 
-
+var helper_check = []
 function addHelpers(helperlist){
   helper_check = []
   helperlist.forEach((d)=> {
@@ -542,6 +546,7 @@ function addHelpers(helperlist){
                      return  d.data.name})
                   .on("click", function(d) {
                       //selected_level = d.depth-2
+                      if (visOptions.helpernodes.value==false) return
                       currentNode = d
                       console.log("helper click")
                       zoomSource = "helper"
@@ -599,7 +604,7 @@ d3.select("#answer").append("div")
                      .attr("id","taggedNodes")
                      .append("div")
 
-btns_ = d3.select("#sidebar").append("div")
+var btns_ = d3.select("#sidebar-content").append("div")
    .attr("id","submit")
    .append("div")
    .attr("class", "text-center")
@@ -617,7 +622,6 @@ btns_.append("button")
       q_info.method = 'submit'
       tagged.forEach((d)=>  {
             q_info.answer_given.push(d.id, d.data.name, d.depth)})
-
       question_log()
       nextQuestion()
       }
@@ -629,7 +633,7 @@ btns_.append("button")
    .text("Skip")
    .on("click", function() {
       tagged = []
-      tagNodes()
+      tagNodes(true)
       log_mouse("skip")
       q_info.method = 'skip'
       question_log()
@@ -657,35 +661,44 @@ btns_.append("button")
 
 var allowTags = true
 var tagged = []
-function tagNodes() {
+function tagNodes(triggeredByTag) {
+   if (typeof triggeredByTag=='undefined') triggeredByTag = false
    if (typeof vis =='undefined') return
    if (vis =='Sundown'){
-      tagNodes_arcs()
+      tagNodes_arcs(triggeredByTag)
       return
    }
+   var tagged_ = [current_zoom_node].concat(tagged).concat(helper_check)
    //if (!allowTags) return;
    var g1 = d3.select("#rect_select_tagged")
               .selectAll("rect")
-              .data(tagged)
+              .data(tagged_)
   g1.enter().append("rect")
-              .attr("id", (d)=>"rect_tagged"+d.id)
-              .attr("class","rect_tagged")
-              .on("mouseover", function(d) {
-                   currentNode = d
-                   d3.select(this)
-                      .classed("highlight",true)
-              })
-              .on("mouseout", function(d) {
-                       d3.select(this)
-                       .classed("highlight",false)
-                    })
-              .on("click", function(d) {
-                    currentNode = d
-                    console.log("tagged_rect")
-                    zoomSource = "tagged_node"
-                    zoomTo(d)
-                 })
+              .attr("id", (d,i) => {
+                 if (i==0) return  "c_select"+d.id
+                 if (tagged.indexOf(d)!=-1) return "c_tagged"+d.id
+                 return "c_helper"+d.id})
+              // .on("mouseover", function(d) {
+              //      currentNode = d
+              //      d3.select(this)
+              //         .classed("highlight",true)
+              // })
+              // .on("mouseout", function(d) {
+              //          d3.select(this)
+              //          .classed("highlight",false)
+              //       })
+              // .on("click", function(d) {
+              //       currentNode = d
+              //       console.log("tagged_rect")
+              //       zoomSource = "tagged_node"
+              //       zoomTo(d)
+              //    })
               .merge(g1)
+               .attr("class", (d,i) => {
+                  if (i==0) return  "clicked0"
+                  if (tagged.indexOf(d)!=-1) return "rect_tagged"
+                  return "rect_helper"
+               })
               .attr("width", (d) => x(d.x1)-x(d.x0))
               .attr("height",(d) =>  y(partition_h-d.y0)-y(partition_h-d.y1))
               .attr('y', function(d) {
@@ -698,6 +711,49 @@ function tagNodes() {
               .attr("x", (d) => x(d.x0))
 
    g1.exit().remove()
+
+ var tagged_helpers = tagged.concat(helper_check)
+ var ggg = d3.select("#context_tagged")
+            .selectAll("circle")
+            .data(tagged_helpers)
+ggg.enter().append("circle")
+            .attr("id", (d) => tagged.indexOf(d)==-1 ? "c_helper"+d.id: "c_tagged"+d.id)
+           .on("click", function(d) {
+             console.log("dotclick")
+             zoomSource = "context_dot"
+             zoomTo(d)
+           })
+           .on("mousemove", function(d) {
+              d3.select(this)
+                 .classed("highlight",true)
+              set_tooltip(d)
+              })
+
+           .on("mouseout", function(d) {
+                    d3.select(this)
+                       .classed("highlight",false)
+                 tooltip.style("display","none")
+                 })
+            .merge(ggg)
+            .attr("class",(d) => tagged.indexOf(d)==-1 ? "helper":"tagged")
+            .attr("r", 3)
+            .attr('cy', function(d) {
+               if (vis =="Treemap"){
+                  return (y_ctx(partition_h-(d.y0+d.y1)/2))
+               } else {
+                  return (0.4*context_pct*y2(d.depth+1.5))
+               }
+            })
+            .attr("cx", (d) => {
+               if (vis =="Treemap"){
+               return (x_ctx(d.x0)+x_ctx(d.x1))/2
+            } else {
+               return (x2(d.x0)+x2(d.x1))/2
+            }
+         })
+
+ ggg.exit().remove()
+
 
    var g = d3.select("#tags")
         .selectAll("div")
@@ -712,7 +768,9 @@ function tagNodes() {
          .text(function(d) {
             return  d.data.name})
          .on("click", function(d) {
-             console.log("textclick")
+            //console.log("textclick", visOptions.helpernodes.value)
+            if (!visOptions.helpernodes.value) return
+
              currentNode = d
              zoomSource = "tagged_text"
              zoomTo(d)
@@ -723,7 +781,7 @@ function tagNodes() {
          .on("click", function(d) {
              tagged.splice(tagged.indexOf(d),1);
              log_mouse("un-tag_text")
-             tagNodes()
+             tagNodes(true)
              d3.event.stopPropagation()
              if ((q_index > 0) && (tagged.length < questions[q_index].nodes*1)){
                  d3.select("#submit-button").classed("disabled",true)
@@ -732,7 +790,7 @@ function tagNodes() {
                       })
   g.exit().remove()
 }
-tagNodes()
+tagNodes(true)
 
 // --------------------------- Questionnaires --------
 
@@ -780,13 +838,15 @@ function nextQuestion(){
       //d3.select("#question").classed("d-none", true)
       q_string = "Thanks for your participation. Press close (X) to return to visualisation."
        d3.select("#question").html(q_string)
-      tagNodes()
+
       addHelpers([])
+      tagNodes(true)
       q_index = -1
       // exit here?
 
    } else if (q_index < questions.length) {
       // next question
+      tagged = []
       d3.select("#Options").select("a").classed("disabled", true)
       q_string = questions[q_index].question
       console.log("nextQuestion", viewmode, q_index,questions[q_index].class)
@@ -799,6 +859,7 @@ function nextQuestion(){
           case 'options':
           case 'structure_options':
             hide_el.fieldset = false
+            hide_el.answers = false
             addOptions(option_set[questions[q_index].options])
              d3.select("#submit-button").classed("disabled",false)
             break;
@@ -817,7 +878,18 @@ function nextQuestion(){
       hide_el.helpers = (h_list.length==0)
       showElements()
       addHelpers(h_list)
+      if (questions[q_index].class=="structure_options"){
+          console.log("XXXX",)
+        d3.select("fieldset").selectAll("text")
+          .html((d,i)=> {
+            console.log(d, helper_check)
+            return d.replace("xA",helper_check[0].data.name)
+                    .replace("xB",helper_check[1].data.name)
+          })
 
+
+
+      }
       // update text of question
       d3.select("#q_num").html("<strong> Question " + questions[q_index].id + ":</strong>")
       d3.select("#question").style("opacity",0)
@@ -1013,6 +1085,7 @@ function showElements() {
            .classed("d-none",hide_el.tags)
     d3.select("#helpers")
                .classed("d-none",hide_el.helpers)
+    tagNodes(true)
     onWindowResize()
 
     }
@@ -1067,6 +1140,7 @@ function updateView(theItem){
   } // early exit if mid-
 //} else {
   var q_add
+  helper_check=[]
   d3.selectAll("#report_div").remove()
   d3.select("#chart").classed("d-none", false)
   d3.select("#sidebar").classed("d-none", false)
@@ -1074,8 +1148,17 @@ function updateView(theItem){
   switch (theItem) {
 
      case 'Set 1':
-     case 'Set 2':
+              var q_add = 202
+              questions = random_all(visOptions.question_seed+q_add)
+              hide_el.type = 'Evaluation'
+              break;
      case 'Set 3':
+              var q_add = 105
+              questions = random_all(visOptions.question_seed+q_add)
+              hide_el.type = 'Evaluation'
+              break;
+     case 'Set 2':
+
      case 'Set 5':
          var q_add = +theItem.split(' ')[1]*10
          questions = random_all(visOptions.question_seed+q_add)
@@ -1232,10 +1315,6 @@ function addOptionsDiv(){
         })
         d3.select("#context_pct").property("value", 100*context_pct)
 
-  //d3.select("#hsl_saturation2").property("value", visOptions.hsl_saturation2.value)
-   //updatePct(context_pct)
-
-
 
    // options
    //optionlist = [{'label': 'Animate','on': 'animate'}]
@@ -1377,25 +1456,28 @@ function randomSizeQuestion(seed, q_count){
    var rand = mulberry32(seed)
 
    q_size = []
-   parent_list = thelist.filter((d)=> d.height >=4)
+   parent_list = thelist.filter((d)=> (d.depth ==1))
 
    while (q_size.length < q_count) {
-      parent =  parent_list[parseInt(rand()*parent_list.length)]
+      parent = parent_list[parseInt(rand()*parent_list.length)]
       p1 = parent.descendants().filter((d)=>d.children)
+      //console.log(parent, p1)
       samenode = true
+      samelevel = true
       n = 0
-      while (samenode & n < 20) {
+      while (samenode  & (n < 20)) {
          n1 = p1[parseInt(rand()*p1.length)]
-         n2 = p1[parseInt(rand()*p1.length)]
+         p2 = p1.filter((d)=> ((d.depth!= n1.depth) & (Math.abs(n1.value-d.value) < 0.4*n1.value)))
+         n2 = p2[parseInt(rand()*p2.length)]
          samenode = (n1==parent) |(n1==n2) | (n2==parent) | (n1.value == n2.value)
          n++
       }
       if (!samenode) {
       q = {class: "comparison-size",
-           helpers:[parent.id, n1.id, n2.id],
+           helpers:[n1.id, n2.id],
            id: q_size.length+1,
            nodes: 1,
-           question: "<br><b>'"+ n1.data.name + "'</b> and <b>'"+ n2.data.name + "'</b> are both descendants of <b>''" + parent.data.name +"</b>. <br><br>Tag the <b>largest</b> of these two nodes.<br><br>",
+           question: "<br>Compare the size of <b>'"+ n1.data.name + "'</b> and <b>'"+ n2.data.name + "'</b><br><br>Tag the <b>largest</b> of these two nodes.<br><br>",
            expected: n1.value > n2.value ? [n1.id] : [n2.id]}
       q_size.push(q)
    }
@@ -1425,7 +1507,7 @@ function randomCountQuestion(seed, q_count){
            helpers:  [ n1.id, n2.id],
            id: q_size.length+1,
            nodes: 1,
-           question: "Which of these nodes: <br><b>'"+ n1.data.name + "'</b> and <b>'"+ n2.data.name + "'</b> has the most children (sub-categories)?<br><br>Tag the node with the <b>most children</b> <br>",
+           question: "Which of these nodes: <br><b>'"+ n1.data.name + "'</b> and <b>'"+ n2.data.name + "'</b> has the most direct children (count)?<br><br>Tag the node with the <b>most children</b> <br>",
            expected: n1.children.length > n2.children.length ? [n1.id] : [n2.id]}
       q_size.push(q)
    }
@@ -1493,7 +1575,14 @@ function randomTwoNodeRelation(seed, q_count){
          n2 = n1.children[parseInt(rand()*n1.children.length)]
          console.log("check n2 children", typeof n2)
          break;
-      case 2://2:A indirect parent of n2
+      case 2: // 3:A descendant of B
+         var nanc = n1.ancestors().filter((d)=> (d.depth < n1.depth-1) & (d.depth>1))
+         if (nanc.length > 0){
+         n2 = nanc[parseInt(rand()*(nanc.length))]
+         break;}
+         console.log("zero length .... proceed")
+         n_index += 1
+      case 3://2:A ancestor of B
          var ndesc = n1.descendants().filter((d)=> d.depth > n1.depth+1)
          if (ndesc.length>0){
          n2 = ndesc[parseInt(rand()*(ndesc.length))]
@@ -1501,13 +1590,7 @@ function randomTwoNodeRelation(seed, q_count){
          break;}
          console.log("zero length .... proceed")
          n_index += 1
-      case 3: // 3:n1 indirect child of n2
-         var nanc = n1.ancestors().filter((d)=> d.depth < n1.depth-1)
-         if (nanc.length > 0){
-         n2 = nanc[parseInt(rand()*(nanc.length))]
-         break;}
-         console.log("zero length .... proceed")
-         n_index += 1
+
       case 4: // 4:sibling
          var siblings = n1.parent.children.filter((d)=> d!= n1)
          if(siblings.length>0){
@@ -1524,7 +1607,7 @@ function randomTwoNodeRelation(seed, q_count){
              id: q_size.length+1,
              nodes: 1,
              helpers: [n1.id, n2.id],
-             question: "<br>What is the relationship between<ul><li><b>A: '"+ n1.data.name+ "'</b>, and </li><li> <b>B:    '"  + n2.data.name + "</b>?</li></ul>",
+             question: "<br>What is the best description of the relationship between<ul><li><b>A: '"+ n1.data.name+ "'</b>, and </li><li> <b>B: '"  + n2.data.name + "'</b>?</li></ul>(Pick the first option from the list that is true)<br>",
              expected:[n_index, option_set.structure[n_index]],
              class: "structure_options",
           options: "structure"}
@@ -1699,13 +1782,13 @@ var question_types = {1: {name: 'Evaluation - Size Comparison',
 
 
 function random_all(theseed){
-   if (typeof theseed =='undefined') theseed = 123
+   if (typeof theseed =='undefined') theseed = 445 //123
    var rand = mulberry32(theseed)
    var q_set = []
-   for(var i=0; i< 2;i++){
+   //for(var i=0; i< 3;i++){
 
-      var pickfrom = shuffle([1,2,3,4,5,6], (+rand()*1000).toFixed(0))
-
+     //var pickfrom = shuffle([1,2,3,4,5,6], #(+rand()*1000).toFixed(0))
+     pickfrom = [5,5,5,4,4,4,1,1,1,2,2,2]
 
    while(pickfrom.length>0){
       var qtype = pickfrom.pop()
@@ -1716,7 +1799,7 @@ function random_all(theseed){
       qs[0].id = q_set.length+1
       q_set.push(qs[0])
       }
-   }
+   //}
    return q_set
 }
 

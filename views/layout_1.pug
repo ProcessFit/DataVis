@@ -1,0 +1,65 @@
+doctype html
+html
+  head
+    title= vis
+    block extraHeader
+
+
+  block link
+  -var selected = 'home'; //default
+
+  -var menu = { 'Home': '/', 'Options': '#' };
+
+  -var tools = {'Explore':'#','Evaluation':'#', 'Evaluation-Size':'#', 'Evaluation-Nav':'#','Evaluation-Explore':'#','Evaluation-Relation':'#','Evaluation-Ancestor':'#', 'Evaluation-Count':'#', 'Survey':'#', 'Guide':'#', 'Questions':'/vis1/questions'};
+
+  -var drops = { 'Icicle': '/vis1/three_icicle9', 'Sundown': '/vis1/three_sunrise8', 'Sunburst':'/vis1/three_sunburst6', 'Treemap':'/vis1/three_treemap8'}
+
+  -var drops_icicle = {'icicle': '/vis/icicle', 'large-elide':'/vis/icicle_3', 'icicle_large [SLOW]': '/vis/icicle_2' };
+
+  -var drops_three = {'three':'/vis/three','threeD3':'/vis/three_d3', 'threeD3_icicle':'/vis/three_icicle','threeD3_icicle3':'/vis/three_icicle3','threeD3_icicle4':'/vis1/three_icicle4', three_icicle5:'/vis1/three_icicle5' };
+
+  -var drops_sunburst = {sunburst_1:'/vis1/three_sunburst', sunburst_3:'/vis1/three_sunburst3' , sunburst_6:'/vis1/three_sunburst6', sunrise_3:'/vis1/three_sunrise3', sunrise_4:'/vis1/three_sunrise4', sunrise_5_up:'/vis1/three_sunrise5'};
+
+  -var drops_canvas = {'d3_canvas':'/vis/icicle_canvas1'};
+
+  -var resourceList = {'Research Log': '/blog/logbook', 'Resources':'/blog/resources','Overview': '/blog', 'Timeline': '/blog/timeline','Flowchart': '/blog/flowchart', "Issues/Bugs": '/blog/issues'}
+  include mixins
+
+  body
+
+    .header
+        +nav("Research Project - Data Visualisation", "navigationbar", "navbar-expand-lg navbar-dark bg-primary fixed-top")
+            each val, key in menu
+              if selected === key
+                +nav_item( val, key ,"nav-item active" ) #{key}
+              else
+                +nav_item( val, key, "nav-item" ) #{key}
+            +nav_item_dropdown("#", "nav-item")(label="View Mode")
+              each val, key in tools
+                +nav_dropdown_item( val, key ) #{key}
+            +nav_item_dropdown( "#","nav-item active")( label="Visualisations" )
+              each val, key in drops
+                +nav_dropdown_item( val, key ) #{key}
+              div.dropdown-divider
+              each val, key in drops_three
+                +nav_dropdown_item( val, key ) #{key}
+              div.dropdown-divider
+              each val, key in drops_sunburst
+                +nav_dropdown_item( val, key ) #{key}
+              div.dropdown-divider
+              each val, key in drops_canvas
+                +nav_dropdown_item( val, key ) #{key}
+            +nav_item_dropdown( "#","active")( label="Information" )
+              each val, key in resourceList
+                +nav_dropdown_item( val, key ) #{key}
+
+    block content
+
+    +bootswatch('cerulean')
+
+    block scripts
+      <script src="https://d3js.org/d3.v5.min.js"></script>
+      <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js")

@@ -1,0 +1,158 @@
+extends training_template
+
+
+block content
+   div.container
+     div(id='log-notes', width='100%', height='800px')
+      .reveal
+        .slides
+          section
+            // - Slide - Hierarchical Data
+            h3 Sundown Plots - Structure
+            table
+              tbody
+                tr
+                  td(width='70%')
+                    img(src='../images/sundown_1.png ', width='700px')
+                  td(style='vertical-align:top')
+                    ul
+                      li  A Sundown plot displays each level of the hierarchy on a separate level, arranged in a semi-circle.
+                      li The quantitative value of each node is indicated by the #[b radial length] of the node. i.e is proportional to the angle of the arc.
+                      li Typical tasks include #[b exploration and browsing] of the hierarchy, searching for specific nodes or leafs of the tree, and #[b comparison] operations between the size of leafs and nodes of the tree.
+
+          section
+            // - Slide - Hierarchical Data
+            h3 Hierarchy - Relations
+            table
+              tbody
+                tr
+                  td(style='vertical-align:top')
+                    ul
+                      li The #[b Root node] appears at the top-centre of the visualisation.
+                      li A #[b child] node is shown directly #[b adjacent] to it's parent node, on the next ring out from the centre of the diagram.
+                      li All children of a node are known as #[b siblings].
+                      li The value of a parent node is the #[b sum] of the value of its children.
+                      li #[b Leaf Nodes] have no children.
+                  td(width='70%')
+                    img(src='../images/sundown_structure.png ', width='700px')
+    
+          section
+            // - Slide - Distant Relations
+            h3 Hierarchy - Distant Relations
+            table
+              tbody
+                tr
+                  td(style='vertical-align:top')
+                    ul
+                      li All nodes that are children, or "distant" children of a given node are known as #[b descendants].
+                      li Nodes that are either the parent, or "distant" parent (i.e. parent of a parent) of a given node are #[b ancestors].
+                      li The "child of a child" is referred to as a #[b grandchild].
+                      li
+                        i Example:
+                          br
+                          | in this image, the node "Medicine" is a grandchild node of the node "Science".
+                  td(width='70%')
+                    img(src='../images/sundown_distant.png ', width='700px')
+                      
+          section(data-state='ok')
+            // - Slide - Hierarchical Data
+            h3 Hierarchy - Common Ancestor
+            table
+              tbody
+                tr
+                  td(style='vertical-align:top')
+                    ul
+                      li For two or more nodes, the  #[b common ancestor] is a node that is an ancestor of all the nodes.
+                      li Typically, tasks require that you find the #[i lowest] common ancestor: i.e. the node at the lowest level.
+                      li
+                        i Example:
+                          br
+                          |  in this image, the nodes "Fine Arts" and "Medicine" have the common ancestor "Knowledge".
+                        br
+                        br
+                      li
+                        | TIP: Where full labels aren't shown, mouse-over the node for a tooltip, or zoom the visualisation.
+                  td(width='70%')
+                    img(src='../images/sundown_common.png ', width='700px')
+
+          section
+            h3 Navigation
+            ul
+              li Navigate by #[b clicking] on a node.
+              li The view will zoom so that the selected node fills the display
+              li
+                | Tip: The scale shown in the context view can be used to assist size comparisons
+            video(controls='', autoplay='true', loop='true')
+              source(data-src='../images/sundown_navigate.mp4', type='video/mp4')
+
+          section
+            // - Slide - Hierarchical Data
+            h3 Zoom and Pan
+            ul
+              li
+                b Zoom
+                |  by scrolling the mouse wheel, or using a pinch-zoom on a touch device.
+              li
+                b Pan
+                |  by holding click, and moving tthe mouse around the centre of the visualisation.
+            video(controls='', autoplay='true', loop='true')
+              source(data-src='../images/sundown_zoom.mp4', type='video/mp4')
+
+          section
+            // - Slide - Hierarchical Data
+            h3 Zoom and Pan - Context View
+            ul
+              li
+                | Use the #[b context view] to zoom by grabbing the handles.
+            video(controls='', autoplay='true', loop='true')
+              source(data-src='../images/sundown_context.mp4', type='video/mp4')
+
+
+          section()
+            // - Slide - Hierarchical Data
+            h3 Tagging Nodes
+            ul
+              li Use the #[b spacebar] to tag/un-tag a node
+              li The node directly under the mouse (and showing a tooltip) will be tagged.
+              li
+                | The tagged node will be shown with a
+                |
+                span(style='color:red') red 
+                |
+                | outline, and in the context view as a
+                |
+                span(style='color:red') red dot
+              li
+                | Click on a 'tag dot'  context view to zoom to the node.
+            video(controls='', autoplay='true', loop='true')
+              source(data-src='../images/sundown_tag.mp4', type='video/mp4')
+
+          section
+            // - Slide - Evaluation Tasks
+            h3 Evaluation Tasks
+            ul
+              li
+                | There are four types of evaluation task.
+              li
+                | These tasks involve navigation, size comparison, and understanding the structure of the tree.
+              li
+                | Each #[b set] of evaluation tasks consist of a total of 12 questions. Questions will remain visible on the left of the visualisation.
+              li
+                | For some questions #[b helper nodes]
+                |  will be highlighted in the visualisation, and in the context area. Click on these nodes in the context area to zoom to the node.
+              li 
+                | Complete questions by 'tagging' the selected node, and pressing 'submit'
+                
+            img(src='../images/sundown_tasks.png ')
+
+          section
+            // - Slide - Hierarchical Data
+            h3 Ready ??
+            a(href='../vis1/sundown')
+              img(src='../images/sundown_1.png ', width='500px')
+              br
+              |                     Click here to proceed ....
+
+block link
+
+  -var selected = 'training'+vis;

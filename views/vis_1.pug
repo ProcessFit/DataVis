@@ -22,10 +22,11 @@ block content
 
   div(class="wrapper")
     nav("id"="sidebar", class="d-none")
-      div(class="modal-header")
-        h5(class="modal-title") Evaluation
-        button(type='button', class='close', aria-label='close', id='collapse_sidebar')
-          span(aria-hidden="true") &times;
+      div("id"="sidebar-content")
+        div(class="modal-header")
+          h5(class="modal-title") Evaluation
+          button(type='button', class='close', aria-label='close', id='collapse_sidebar')
+            span(aria-hidden="true") &times;
     div(id="content")
       h1= undefined
       div(id="frontmatter")

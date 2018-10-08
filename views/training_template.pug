@@ -1,0 +1,50 @@
+block header
+  meta(charset='utf-8')
+  meta(name='viewport', content='width=device-width, initial-scale=0.66, maximum-scale=0.9, user-scalable=no')
+  meta(name='author', content='Linda Woodburn')
+  title Visualisation of quantitative hierarchies
+  meta(name='apple-mobile-web-app-capable', content='yes')
+  meta(name='apple-mobile-web-app-status-bar-style', content='black-translucent')
+  link(rel='stylesheet', href='../css/reveal.css')
+  link(rel='stylesheet', href='../css/white.css')
+  style.
+    .reveal .slides {
+    text-align: left;
+    }
+    .reveal .slides section>* {
+    margin-bottom: 50;
+
+    }
+
+
+block content
+  h1= title
+  div.container
+     div(id='training', width='100%', height = '800px' style="padding:50px")
+
+
+block link
+  -var selected = 'training'+vis;
+
+block append scripts
+  script(src='../js/reveal.js')
+  script.
+    // More info https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: false,
+    rollingLinks: true,
+    // The "normal" size of the presentation, aspect ratio will be preserved
+    // when the presentation is scaled to fit different resolutions. Can be
+    // specified using percentage units.
+    width: 1050,
+    height: 800,
+    // Factor of the display size that should remain empty around the content
+    margin: 0.2,
+    // Bounds for smallest/largest possible scale to apply to content
+    minScale: 0.8,
+    maxScale: 1.5,
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+    });

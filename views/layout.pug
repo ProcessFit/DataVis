@@ -14,7 +14,7 @@ html
 
   -var randoms = {'Compare Size':'#', 'Navigate':'#','Explore':'#','Node Relationship':'#','Common Ancestor':'#', 'Child Nodes':'#'}
 
-  -var drops = { 'Icicle': '/vis1/three_icicle9', 'Sundown': '/vis1/three_sunrise8', 'Sunburst':'/vis1/three_sunburst6', 'Treemap':'/vis1/three_treemap8'}
+  -var drops = { 'Icicle': '/vis1/icicle', 'Sundown': '/vis1/sundown', 'Treemap':'/vis1/treemap'}
 
   -var resourceList = {'Research Log': '/blog/logbook', 'Resources':'/blog/resources','Overview': '/blog', 'Timeline': '/blog/timeline','Flowchart': '/blog/flowchart', "Issues/Bugs": '/blog/issues'}
   include mixins
@@ -26,6 +26,8 @@ html
             +nav_item_dropdown( "#","nav-item active")( label="Visualisations" )
                 each val, key in drops
                   +nav_dropdown_item( val, key ) #{key}
+                div.dropdown-divider
+                +nav_dropdown_item("/training", "Training") Training
             +nav_item_dropdown("#", "nav-item")(label="Evaluate")
               +nav_dropdown_item("#", "Show") Show Visualisation
               div.dropdown-divider

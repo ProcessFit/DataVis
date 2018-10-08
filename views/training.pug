@@ -1,0 +1,39 @@
+extends layout
+
+block content
+  h1= title
+  div.container
+     div(id='log-notes', width='100%', height = '800px' style="padding:50px")
+      center
+        br
+        br
+        h1
+          | TRAINING: 
+        
+          br
+          | Visualisation of
+          br
+          |  Quantitative Hierarchies
+        br
+        table
+          tbody
+            tr
+              td
+                a(href='training/icicle')
+                  img(src='images/icicle.png ', width='280px', height='160px')
+              td
+                a(href='training/sundown')
+                  img(src='images/sundown.png ', width='280px', height='160px')
+            tr
+              td(style='text-align:center')
+                a(href='training/icicle') Icicle Plot
+              td(style='text-align:center')
+                a(href='training/sundown') Sundown
+        br
+        small
+          i Select a Visualisation Type to continue ...
+      
+
+block link
+
+  -var selected = 'training'+vis;
