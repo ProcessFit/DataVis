@@ -178,7 +178,7 @@
       "Treemap":[{
       "id": "intro",
       "skip": true,
-      "question": "<br><h2>Treemaps - Training</h2><br><p>This study explores how to effectively visualise <b>Quantitative Hierarchical Data</b>.<p><strong>Hierarchical data</strong> is found in many applications including file systems, digital repositories, CPU stack traces, catalogues, software libraries, organisation charts, and logistics.<p>Examples of hierarchical data visualisations are shown below:<p><figure><img src='../images/intro_treemap.png'/></figure><h5>Features:</h5><ul><li> Both <strong>node-link</strong> and <strong>Treemap</strong> diagrams show the hierarchical relationship between nodes.</li><li>In a Treemap plot, <b>child nodes</b> are positioned <i>within</i> the area of their r parent - i.e. the children are sub-divisions of the parent.</li><li>The <b>value</b> of each node is the <b>sum</b> of the value of it's child nodes.</li><li>In the Treemap diagram,the <b>value</b> of each node is proportional to the <b>area</b> of the node.</li></ul>In the above diagrams, some examples of the  <strong>relationships </strong> are:</p><ul><li><b>A</b> is the <b>root</b> node, and is an <b>ancestor</b> of all nodes in the hierarchy.</li><li><b>A</b> is the <strong>parent</strong> of <strong>B</strong> &amp; <strong>C</strong>. It has a value of <i>100</i>, which is a sum of the values of it's child nodes.</li><li><b>B</b> has three <strong>children</strong>: <strong>D</strong>, <strong>E</strong> &amp; <strong>F</strong>.</li><li><strong>D</strong>, <strong>E</strong> &amp; <strong>F</strong> are <strong>siblings</strong>, and are <strong>descendants</strong> of <strong>A</strong>.</li><li><strong>D</strong>, <strong>E</strong> &amp; <strong>F</strong> are <strong>leaf nodes</strong> (have no children).</li> </ul></p><p><i>Continue through this training by pressing the <strong>Next</strong> button<i>.</p>",
+      "question": "<br><h2>Treemaps - Training</h2><br><p>This study explores how to effectively visualise <b>Quantitative Hierarchical Data</b>.<p><strong>Hierarchical data</strong> is found in many applications including file systems, digital repositories, CPU stack traces, catalogues, software libraries, organisation charts, and logistics.<p>Examples of hierarchical data visualisations are shown below:<p><figure><img src='../images/intro_treemap.png'/></figure><h5>Features:</h5><ul><li> Both <strong>node-link</strong> and <strong>Treemap</strong> diagrams show the hierarchical relationship between nodes.</li><li>In a Treemap plot, <b>child nodes</b> are positioned <i>within</i> the area of their parent - i.e. the children are sub-divisions of the parent.</li><li>The <b>value</b> of each node is the <b>sum</b> of the value of it's child nodes.</li><li>In the Treemap diagram,the <b>value</b> of each node is proportional to the <b>area</b> of the node.</li></ul>In the above diagrams, some examples of the  <strong>relationships </strong> are:</p><ul><li><b>A</b> is the <b>root</b> node, and is an <b>ancestor</b> of all nodes in the hierarchy.</li><li><b>A</b> is the <strong>parent</strong> of <strong>B</strong> &amp; <strong>C</strong>. It has a value of <i>100</i>, which is a sum of the values of it's child nodes.</li><li><b>B</b> has three <strong>children</strong>: <strong>D</strong>, <strong>E</strong> &amp; <strong>F</strong>.</li><li><strong>D</strong>, <strong>E</strong> &amp; <strong>F</strong> are <strong>siblings</strong>, and are <strong>descendants</strong> of <strong>A</strong>.</li><li><strong>D</strong>, <strong>E</strong> &amp; <strong>F</strong> are <strong>leaf nodes</strong> (have no children).</li> </ul></p><p><i>Continue through this training by pressing the <strong>Next</strong> button<i>.</p>",
       "class": "training",
       "title": "Visualising Quantitative Hierarchical Data",
       "nodes": 0,
@@ -286,7 +286,7 @@
      }],
      "Treemap": [{
       "id": 1,
-      "question": "<br>The visualisation can be navigated by <b>Clicking</b> on a node to select a child node, or by clicking on the node's label<br> <br>Return to a node's parent by using a <b>right-click</b><br><br><b>'Breadcrumbs'</b> are shown across the top of the main view, to show the path that has been followed when navigating to a node. <br><br>The breadcrumbs can be used to return to a node.<br><br> <b>PRACTICE TASKS:</b>",
+      "question": "<br>The visualisation can be navigated by <b>Clicking</b> on a node to select a child node, or by clicking on the node's label<br> <br>Return to a node's parent by using a <b>right-click</b><br><br><b>'Breadcrumbs'</b> are shown across the top of the main view, to show the path that has been followed when navigating to a node. <br><br>The breadcrumbs can be used to return to a node, and are useful for answering structure questions.<br><br> <b>PRACTICE TASKS:</b>",
       "class": "training",
       "title": "General Navigation",
       "nodes": 0,
@@ -366,7 +366,7 @@
     },
     {
       "id": 3,
-      "question": "<br>The <b>context view</b> is the 'compact view' located at the top of the visualisation.<br><br> The context view can be used to zoom and pan the 'detail view' - the main part of the visualisation.<br><br>To <b>zoom</b>: use the mouse to move the context-handles (red vertical lines).<br><br><b>To pan</b>: click and drag the region between the context handles<br><br><b>PRACTICE TASKS:</b><br>",
+      "question": "<br>The <b>context view</b> is the 'compact view' located at the top of the visualisation.<br><br> The context view can be used to zoom and pan the 'detail view' - the main part of the visualisation.<br><br>To <b>zoom</b>: use the mouse to move the context-handles (red lines).<br><br><b>To pan</b>: 'click and drag' the region between the context handles<br><br><b>PRACTICE TASKS:</b><br>",
       "class": "training",
       "title": "Context View",
       "nodes": 0,
@@ -589,7 +589,7 @@
          ],
          "checks": [
            {
-             "event": "option_selected_5",
+             "event": "option_selected_4",
              "minCount": 1,
              "child_n": 1,
              "complete": false,
@@ -602,6 +602,7 @@
         "id": 12,
         "question": "<br><b>Common Ancestor</b>  questions require you to determine the <b>Lowest Common Ancestor</b> shared by two nodes.<br>The answer is the <i>lowest</i> node in the hierarchy which is an ancestor of both nodes. <br><br><b>PRACTICE TASKS:</b><br>",
         "class": "training",
+        "tag": true,
         "title": "Practice Question:<br> Common Ancestor 1",
         "nodes": 0,
         "helpers": [
@@ -624,6 +625,7 @@
       "id": 13,
       "question": "<br><b>Common Ancestor</b>  questions require you to determine the <b>Lowest Common Ancestor</b> shared by two nodes.<br>The answer is the <i>lowest</i> node in the hierarchy which is an ancestor of both nodes. <br><br><b>PRACTICE TASKS:</b><br>",
       "class": "training",
+      "tag": true,
       "title": "Practice Question:<br> Common Ancestor 2",
       "nodes": 0,
       "helpers": [

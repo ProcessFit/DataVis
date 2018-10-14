@@ -1672,9 +1672,7 @@ function tagNodes_arcs(triggeredByTag) {
       tagNodes_arcs("clicked bar");
       log_mouse("un-tag_text", rads.domain());
       d3.event.stopPropagation();
-      if (q_index > 0 && tagged.length < +questions[q_index].nodes) {
-        d3.select("#submit-button").classed("disabled", true);
-      }
+      checkSubmit()
     });
   g.exit().remove();
 }

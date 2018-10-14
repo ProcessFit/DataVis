@@ -902,7 +902,8 @@ function colour_nodes() {
 function update_colors(layer_num, selectedList) {
   //console.log("update_colors", list_in.length, mesh_in.geometry.faces.length)
   //list_in = thelist.filter((d)=> d.depth==i+1)
-  if (selectedList.length <= 1) return;
+  //console.log(layer_num, selectedList)
+  if (selectedList.length==0) return;
   mesh_in = layers[layer_num];
   highlight = false;
 
@@ -1476,14 +1477,18 @@ function zoomToCoord(coords, depth) {
 function highlightBoxes() {
   if (!visOptions.fadenodes.value) return;
   if (sequenceArray.length == 0) return;
-  dim_colors();
-  var d = sequenceArray[sequenceArray.length - 1];
+  dim_colors(); // dims everything
+  var d = sequenceArray[sequenceArray.length - 1]; // last element of the breadcrumb
   var children = d.descendants();
   //console.log(children)
   for (var depth = d.depth; depth < root.height + 1; depth++) {
+   // console.log("update depth", depth)
+    if (d == root) {
+      reset_colors()
+    } else {
     update_colors(depth - 1, children.filter(e => e.depth == depth));
   }
-}
+}}
 
 // function highlightChildren(d) {
 //    // faster than recursive ... use position
