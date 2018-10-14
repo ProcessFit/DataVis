@@ -45,11 +45,11 @@ app.use(function(req,res,next){
 });
 
 app.get('/', function (req, res) {
-  res.redirect('/vis/icicle')
+  res.redirect('/vis_1/icicle')
 })
 
 app.get('/index.html', function (req, res) {
-  res.redirect('/vis/icicle')
+  res.redirect('/vis_1/icicle')
 })
 
 app.get('/vis/:visID', function (req, res) {
