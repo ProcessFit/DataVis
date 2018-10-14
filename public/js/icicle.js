@@ -52,10 +52,12 @@ var  x = d3.scaleLinear()
 var  data = {},
      root = {},
      nodes ={},
+     thelist = [],
      all_labels = [],
      nodes_flat = [],
      currentNode = '',
      prevNode = '',
+     current_zoom_node = '',
      selected_nodes = [],
      comparator = compareByCategory,
      vis = "IciclePlot",
@@ -291,7 +293,7 @@ function reScale() {
 
 
   width = (window.innerWidth-side_width-2*margin)
-  height = (window.innerHeight-120)*(1-context_pct);
+  height = (window.innerHeight-150)*(1-context_pct);
   svg.style("width", width+margin);
   svg.style("height",(window.innerHeight-120));
 
@@ -333,15 +335,20 @@ d3.json(datafile).then(function(data) {
     var rand = mulberry32(100)
    root.descendants().forEach(function(d,i){
     if (typeof d.children=='undefined') {
-       d.data.v =  ((rand()*40).toFixed(2)+1)
+       d.data.v = +d.data.size==1?  ((rand()*40).toFixed(2)+1) : d.data.size
      }
+   if (datafile == '../data/chibrowseoff.json'){
    d.data.name = d.data.name.replace(" 1","")
+  }
    })
    root.sum((d)=> d.v)
 
 
-
+    if (parent.startstate=="zoomed"){
+    current_zoom_node = root.children[2]
+  } else {
     current_zoom_node = root
+  }
     currentNode = root
     prevNode = root
 
@@ -353,6 +360,7 @@ d3.json(datafile).then(function(data) {
     updateSearchBox()
 
     // Prepare data
+
     nodes = partition(root).sort(compareByCategory);
     root.descendants().forEach(function(d,i){
 
@@ -361,14 +369,21 @@ d3.json(datafile).then(function(data) {
    })
     y2 = d3.scaleLinear().domain([0,root.height+1])
                          .range([0, height])
-
-    init()   // Creates initial setup of charts etc.
+    thelist = root.descendants().sort(compareByCategory)
+    // p1 = new Promise (function(resolve, reject){
+    //   resolve(init())
+    // })   // Creates initial setup of charts etc.
+    //
+    // p1.then(()=> {
+    //
+    //  });
+    init()
     }).catch(function(err) {
     console.log(err);
-});
+  }); // end of initial promise
 }  // end load data
 var datafile = '../data/chibrowseoff.json'
-//var datafile = '../data/animalia.json'
+
 load_data()
 //--------------------------------------------------------------
 // Initialise Visualisation
@@ -390,7 +405,7 @@ function init(){
     vis_group = new THREE.Group();
    // set geometry and data for vis
    barheight = partition_h / (root.height+1) // fills vis
-   thelist = root.descendants().sort(compareByCategory)
+
 
    camera = new THREE.OrthographicCamera(partition_w / - 2, partition_w / 2,    partition_h / 2, partition_h / - 2, 1, 1000 );
    camera.position.z = 20;
@@ -457,10 +472,14 @@ function init(){
                  tooltip.style("display","none")})
 
 
+
    // Add Listeners
    window.addEventListener( 'resize', onWindowResize, false );
    onWindowResize()
    zoomSource = "Initial"
+   if (parent.startstate=="zoomed"){
+     console.log("XXX", current_zoom_node, thelist)
+     zoomTo(current_zoom_node)}
 } // init
 
 //--------------------------------------------------------------
@@ -675,7 +694,6 @@ var tween_current = { scalex: 1, posx:0 };
 var tween_target = { scalex: 100, posx:500};
 
 function makeTween(){
-
     var tween = new TWEEN.Tween(tween_current).to(tween_target, visOptions.animate.value? tweenTime: 0);
     tween.onUpdate(function(){
                context_group.call(brush.move, [x2(tween_current.posx),x2(tween_current.posx1)]);
@@ -758,6 +776,7 @@ function onWindowResize() {
       addBrush()
       doUpdates()
       d3.select("#tooltip-body").classed("d-none",!visOptions.tooltips.value)
+    return (true)
 }
 
 
@@ -830,8 +849,18 @@ function zoomed() {
 function brushed() {
   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
   //if (d3.event.sourceEvent) console.log(d3.event.sourceEvent.type);
+
   var s = d3.event.selection || x2.range();
+  //if (s==x2.range()) return // no change
   x.domain(s.map(x2.invert));
+
+  if (zoom_x.toFixed(6) == (width / (s[1]-s[0])).toFixed(6)){
+    if (d3.event.sourceEvent!=null){
+    console.log(d3.event.sourceEvent)
+    zoomSource = "_pan"} else {zoomSource="XX"}
+  } else {
+    zoomSource = "_zoom"
+  }
   zoom_x = width / (s[1]-s[0])
 
   // update the zoom and translate settings associated with zoom area
@@ -849,7 +878,8 @@ function fullUpdate(){
 function doUpdates(){
    drawLabels()
    //zoomRect()
-   tagNodes()
+   //console.log("tagnodes triggered by updates")
+   tagNodes("updates")
 }
 
 function brushended(){
@@ -859,7 +889,7 @@ function brushended(){
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
     //console.log("brushended2", update_duration, d3.event.sourceEvent  )
     update_mesh(zoom_x)
-    log_mouse("context_brush")
+    log_mouse("context_brush"+zoomSource)
 
  };
 
@@ -886,12 +916,13 @@ function brushended(){
 
 var zoomSouce;
 function zoomTo(d) {
+
    current_zoom_node = d
 
-   if (!d.children) {
+   if (!d.children & d.parent) {
       d = d.parent
    }
-
+   console.log(d, current_zoom_node, d.x0,d.x1)
    zoomToCoords([d.x0, d.x1])
 }
 
@@ -928,22 +959,23 @@ function zoomended(){
      if (Math.pow((zoomStart.x - d3.mouse(this)[0]),2)<4){
            // Move this to a separate function for re-use in search
            d = getIntersect() // point from raycaster
-           current_zoom_node=d
+
            if (d) {
+            current_zoom_node=d
             zoomSource = "click"
-            log_mouse("select_"+zoomSource,[d.x0, d.x1])
+            //log_mouse("select_2_"+zoomSource,[d.x0, d.x1])
             zoomToCoords([d.x0, d.x1])
             //selected_nodes = [d]
             //select_nodes()
          }
       } else {
          console.log("zoomstop")
-           log_mouse("pan")
+           log_mouse("pan",x.domain())
       }
      } else {
      //if (Math.pow((zoomStart.x - d3.mouse(this)[0]),2)>4) {
         console.log("zoomended", d3.event.sourceEvent)
-        if (!d3.event.sourceEvent) {log_mouse("zoom")}
+        if (!d3.event.sourceEvent) {log_mouse("zoom",x.domain())}
      //}
      update_mesh(zoom_x)}
   };

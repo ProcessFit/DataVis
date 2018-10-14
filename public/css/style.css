@@ -21,6 +21,9 @@ label {
    font-size: 0.8rem;
 }
 
+.label_opt {
+   font-size: 0.85rem;
+}
 
 #svg_icicle {
    width:100%;
@@ -92,32 +95,44 @@ a {
   transition: fill 1200ms;
 }
 
-.vislabel_w.leaf {
+.vislabelT_w {
+  font-size: 0.85rem;
+  font-family: sans-serif;
+  text-anchor: middle;
+  font-weight:500;
+  fill: whitesmoke;
+  z-index: 10;
+  transition: fill 1200ms;
+}
+
+
+
+.vislabelT_w.leaf {
    font-size: 0.85rem !important;
    font-family: sans-serif !important;
-   fill: #FFF !important;
+   fill: #d9f6fa !important;
    font-weight: 300 !important;
 }
 
-.vislabel_w.toplevel {
+.vislabelT_w.toplevel {
   fill: yellow;
   transition: fill 1200ms;
 }
 
-.vislabel_w.selectednode {
+.vislabel_w.selectednode, .vislabelT_w.selectednode {
   font-weight: 300;
   opacity:0.4;
 
 }
 
-.vislabel_w.selected {
+.vislabel_w.selected, .vislabelT_w.selected {
   font-size: 0.95rem;
   font-family: sans-serif;
   font-weight: 300;
   opacity:1;
 }
 
-.vislabel_w.highlight {
+.vislabel_w.highlight, .vislabelT_w.highlight {
   transition: 300ms;
   font-size: 0.95rem;
   font-family: sans-serif;
@@ -137,7 +152,7 @@ text.clicked0 {
 rect {
    position: relative;
    stroke: #fff;
-   stroke-width: 1;
+   stroke-width: 0.15em;
    stroke-opacity: 0.5;
    z-index: 2;
    opacity:0.9;
@@ -161,7 +176,7 @@ path.clicked0, rect.clicked0 {
    position: relative;
    pointer-events: none;
     stroke: #ffec62 !important;
-    stroke-width: 3;
+    stroke-width: 2;
     stroke-opacity: 1;
     z-index: 5;
     fill: none;
@@ -171,7 +186,7 @@ rect.rect_tagged, path.rect_tagged {
    cursor: pointer;
    position: relative;
     stroke:red !important;
-    stroke-width: 1.5;
+    stroke-width: 2;
     stroke-opacity: 1;
     z-index: 5;
     fill: none;
@@ -181,8 +196,8 @@ rect.rect_tagged, path.rect_tagged {
 rect.rect_helper, path.rect_helper {
    cursor: pointer;
    position: relative;
-    stroke: #eaa5a5 !important;
-    stroke-width: 1.5;
+    stroke: #ffa000 !important;
+    stroke-width: 2;
     stroke-opacity: 1;
     z-index: 5;
     fill: none;
@@ -191,7 +206,7 @@ rect.rect_helper, path.rect_helper {
 
 
 
-rect.highlight {
+path.highlight, rect.highlight {
     stroke-width: 4 !important;
 }
 #tooltip {
@@ -224,8 +239,8 @@ rect.highlight {
 }
 
 .card-body {
-   padding: 0.05rem;
-   font-size: 0.9rem;
+   padding: 0.02rem;
+   font-size: 0.85rem;
 }
 
 .ui-autocomplete {
@@ -323,18 +338,22 @@ rect.highlight {
 
 .ticks {
   font: 12px sans-serif;
+  stroke: slategray;
         -webkit-user-select: none;
          -moz-user-select: none;
           -ms-user-select: none;
               user-select: none;
+  pointer-events: none;
 }
 
 .tick {
   font-size: 0.7rem;
+  fill: slategray;
         -webkit-user-select: none;
          -moz-user-select: none;
           -ms-user-select: none;
               user-select: none;
+  pointer-events: none;
 }
 
 .track,
@@ -366,7 +385,7 @@ text.handle {
   fill: #0074D9;
   stroke: #000;
   stroke-opacity: 0.5;
-  stroke-width: 1.25px;
+  stroke-width: 0.2em;
   font-size: 2.2em;
   font-weight: 900;
   font-color: black;
@@ -392,12 +411,12 @@ circle.tagged{
 circle.highlight{
      fill: red;
      stroke: yellow;
-     stroke-width: 1.5;
+     stroke-width: 0.3em;
 
 }
 
 circle.helper{
-     fill: #eaa5a5;
+     fill: #ffa000;
      stroke: black;
 }
 
@@ -466,6 +485,12 @@ div.div_container{
     padding: 0px 150px 50px 150px;
 }
 
+#sidebar.training {
+    margin-left: 0px;
+    min-width: 420px;
+    max-width: 420px;
+}
+
 #sidebar-content {
     max-width: 800px;
     margin-right: auto;
@@ -512,6 +537,8 @@ a[aria-expanded="true"] {
     color: #fff;
     background: #6d7fcc;
 }
+
+
 
 a[data-toggle="collapse"] {
     position: relative;
