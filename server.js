@@ -54,21 +54,12 @@ app.get('/index.html', function (req, res) {
 
 app.get('/vis/:visID', function (req, res) {
    let vistype = req.params.visID
-  res.render('vis', { title: '', vis: vistype })
+  res.render('vis_1', { title: '', vis: vistype })
 })
 
 app.get('/vis1/:visID', function (req, res) {
    let vistype = req.params.visID
   res.render('vis_1', { title: '', vis: vistype })
-})
-
-app.get('/viscs/:visID', function (req, res) {
-   let vistype = req.params.visID
-  res.render('vis_cs', { title: '', vis: vistype })
-})
-
-app.get('/vis', function (req, res) {
-  res.render('page1', { title: '', vis: 'icicle' })
 })
 
 app.get('/blog', function (req, res) {
