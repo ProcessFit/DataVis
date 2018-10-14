@@ -26,10 +26,10 @@ html
             +nav_item_dropdown( "#","nav-item active")( label="Visualisations" )
                 each val, key in drops
                   +nav_dropdown_item( val, key ) #{key}
-                div.dropdown-divider
-                +nav_dropdown_item("/training", "Training") Training
             +nav_item_dropdown("#", "nav-item")(label="Evaluate")
               +nav_dropdown_item("#", "Show") Show Visualisation
+              div.dropdown-divider
+              +nav_dropdown_item("#", "Training") Training
               div.dropdown-divider
               each val, key in tools
                 +nav_dropdown_item( val, key ) #{key}
@@ -37,7 +37,7 @@ html
               each val, key in randoms
                 +nav_dropdown_item( val, key ) #{key}
               div.dropdown-divider
-              +nav_dropdown_item("#", "Survey") Survey
+              +nav_dropdown_item("https://goo.gl/forms/Redf0nnxQI1KB3Bp2", "Survey") Survey
               div.dropdown-divider
               +nav_dropdown_item("#", "Reports") Reports
             +nav_item( "#", "Options" ,"nav-item" ) Options
