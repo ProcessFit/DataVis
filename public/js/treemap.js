@@ -86,7 +86,7 @@ var c_depth = d3
 var widthScale = d3
   .scalePow()
   .exponent(-1)
-  .domain([0.005, 0.02])
+  .domain([0.001, 0.02])
   .range([20, 0]);
 
 // three_x scales recalculated on zooming and re-positioning of meshes
@@ -173,7 +173,7 @@ var visOptions = {
     type: "slider",
     id: "linewidth1",
     min: 0.001,
-    max: 0.04,
+    max: 0.08,
     step: 0.001,
     value: widthScale.domain()[0]
   },
@@ -681,6 +681,7 @@ function init() {
 // -------------------------------------------------------------
 
 function updateLineWidth() {
+
   scene.remove(mesh_line2);
   layer_lines = [];
   var lines_group = new THREE.Group();
@@ -1837,20 +1838,20 @@ function showLevel(sliderVal) {
   for (i = 0; i < layers.length; i++) {
     if (i == selected_level - 1) {
       layers[i].material.opacity = 0.7;
-      layer_lines[i].position.z = 0;
+      layer_lines[i].position.z = 0; // layer lines shown
       leaf_lines[i].material.opacity = 0.8;
     } else if (i == selected_level) {
       layers[i].material.opacity = 0.7;
-      layer_lines[i].position.z = 50;
+      layer_lines[i].position.z = 50; //layer lines hidden
       leaf_lines[i].material.opacity = 0.8;
     } else if (i < selected_level - 1) {
       layers[i].material.opacity = 0.7;
-      layer_lines[i].position.z = 0;
+      layer_lines[i].position.z = 0; //shown
       leaf_lines[i].material.opacity = 0.15;
     } else {
-      layer_lines[i].position.z = 50;
+      layer_lines[i].position.z = 0; // hidden
       layers[i].material.opacity = 0.8;
-      leaf_lines[i].material.opacity = 0.4;
+      leaf_lines[i].material.opacity = 0.1;
     }
   }
   render();
