@@ -27,7 +27,7 @@ const url = process.env.MONGODB_URI;
 // Database Name
 const dbName = 'testing';
 console.log("********************")
-MongoClient.connect(url, (err, client) => {
+MongoClient.connect(url, {useNewUrlParser: true}, (err, client) => {
   if(err) {
     return console.log(err);
   }

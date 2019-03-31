@@ -73,8 +73,8 @@ function set_tooltip(d) {
 // ---------------------------------------
 
 var cS = [[300, 0.5, 0.5], [-240, 0.5, 0.5]];
-
-var color = d3.scaleOrdinal(d3.schemeCategory20c);
+console.log("sharedtools1", cS)
+//var color = d3.scaleOrdinal(d3.schemeCategory20c);
 var z = d3.scaleSequential(d3.interpolateRainbow);
 var zg = d3.scaleSequential(d3.interpolateGreys);
 var stdColor = d3.scaleSequential(
