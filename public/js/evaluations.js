@@ -1,7 +1,7 @@
 /* -------------------------------- *
   Evaluations
  * -------------------------------- */
-
+console.log("Evaluations loaded")
 var q_set, q_info;
 var eval_num = 0;
 var helper_check = [];
@@ -10,6 +10,10 @@ var tagged = [];
 init_questions();
 init_answers();
 add_buttons();
+
+
+
+
 
 /* --------------------------------*
   Initialise Evaluations/Q/Training
@@ -431,7 +435,7 @@ function addHelpers(helperlist) {
 function tagNodes(triggeredByTag) {
   if (typeof triggeredByTag == "undefined") triggeredByTag = false;
   if (typeof vis == "undefined") return;
-  if (vis == "Sundown") {
+  if (vis == "Sundown" | vis == "Sunburst") {
     tagNodes_arcs(triggeredByTag);
     return;
   }
@@ -819,6 +823,7 @@ $(document).ready(function() {
 });
 
 function updateView(theItem) {
+  if (vis =="Sunburst" && theItem == "Training") return
   // Check for partial completion of an evaluation
   if (q_index > 0) {
     showModalCheck(theItem);
@@ -848,6 +853,11 @@ function updateView(theItem) {
     addOptionsDiv();
     onWindowResize();
     return;
+  }
+
+  if (theItem.substring(0,2)=="..") {
+    console.log("found the file")
+    return
   }
 
   buildQuestions(theItem);
@@ -909,6 +919,11 @@ function addOptionsDiv() {
   hide_("#tags");
 
   console.log("Adding options");
+  var filenames = [{"name":"Categories",
+          "file": "chibrowseoff.json"},
+        {"name":"Animalia",
+         "file": "animalia.json"},
+       {"name":"Flare", "file":"flare.json"}]
 
   var options = d3
     .select("#Evaluation")
@@ -925,25 +940,21 @@ function addOptionsDiv() {
     .append("select")
     .attr("id", "data")
     .attr("class", "custom-select")
-    .on("change", function() {
+    .on("change", function(d) {
       console.log(this.value);
-      datafile = this.value;
+
       log_options({ option: "file", value: this.value });
-      load_data();
+      window.location.href ="/vis1/"+visload +"|" +this.value
+      //load_data();
+      //this.href = "/"+vis+"|"+
     });
  var ff =  d3.select("#data")
     .selectAll("option")
-    .data([{"name":"Categories",
-            "file": "chibrowseoff.json"},
-          {"name":"Animalia",
-           "file": "animalia.json"},
-         {"name":"Flare", "file":"flare.json"},
-        {"name":"Ebay (too large for sundown)", "file":"ebay.json"}])
-
+    .data(filenames)
     ff.enter().append("option")
-    .attr("value", (d)=> "../data/"+d.file)
+    .attr("value", (d)=> d.name)
     .attr("selected", (d)=> {
-      if (d.name=="Categories") return "selected"})
+      if (d.name==dfile) return "selected"})
     .html((d) => d.name);
 
 

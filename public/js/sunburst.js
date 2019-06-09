@@ -22,32 +22,23 @@ var width = 1000,
   context_pct = 0.2;
 
 // Scales
-var x = d3
-    .scaleLinear()
-    .domain([0, partition_h])
-    .range([-partition_h / 2, partition_h / 2]),
-  y = d3
-    .scaleLinear()
-    .domain([0, partition_h])
-    .range([0, partition_h]),
-  x2 = d3
-    .scaleLinear()
-    .domain([0, partition_h])
-    .range([0, partition_h]), //
-  y2 = d3
-    .scaleLinear()
-    .domain([0, partition_h]) // NOT USED?
-    .range([0, partition_h]);
-(rads = d3
-  .scaleLinear()
-  .domain([0, partition_h])
-  .range([-Math.PI / 2, Math.PI / 2])
-  .clamp(true)),
-  (rads2 = d3
-    .scaleLinear()
-    .domain([0, partition_h])
-    .range([-Math.PI / 2, Math.PI / 2])
-    .clamp(true)),
+var x = d3.scaleLinear().domain([0,partition_w])
+                         .range([0, partition_w]),
+     y = d3.scaleLinear().domain([0,partition_h])
+                        .range([0, partition_h]),
+     x2 = d3.scaleLinear().domain([0,partition_w])
+                         .range([0, partition_w]), //
+     y2 = d3.scaleLinear().domain([0,partition_h]) // NOT USED?
+                        .range([0, partition_h])
+     rads = d3.scaleLinear().domain([0,partition_w])
+                        .range([-Math.PI,Math.PI])
+                        .clamp(true)
+     rads2 = d3.scaleLinear().domain([0,partition_w])
+                   .range([-Math.PI,Math.PI])
+                   .clamp(true)
+     three_x = d3.scaleLinear().domain([0,partition_w]).range([-500,500]),
+     three_y = d3.scaleLinear().domain([0,partition_h]).range([500,-500]),
+     oldx = d3.scaleLinear().domain([0,partition_w]).range([0,partition_w]),
   (xScaleFull = d3
     .scaleLinear()
     .domain([0, partition_w])
@@ -77,21 +68,21 @@ var data = {},
   prevNode = "",
   selected_nodes = [],
   comparator = compareByCategory,
-  vis = "Sundown",
-  visload = "sundown"
+  vis = "Sunburst",
+  visload = "sunburst"
   update_duration = 200;
 
 // Initial sizing of all nodes
 var partition = d3
   .partition() //
-  .size([partition_h, partition_h])
+  .size([partition_w, partition_h])
   .padding(0)
   .round(false);
 
 // Data Sort functions
 function sort(comparator) {
   drawIcicle(comparator);
-  console.log("Sort ... call update icicle");
+  console.log("Sort ... call update sundown");
   //updateIcicle();
 }
 
@@ -131,15 +122,15 @@ var svg_holder = d3
 
 var svg = svg_holder
   .append("svg")
-  .attr("id", "svg_icicle")
-  .style("height", height + view_offset)
-  .style("width", width);
+  .attr("id", "svg_sunburst")
+  .style("height", height)
+  .style("width", window.innerWidth);
 
 var context = svg.append("g").attr("class", "context");
 
-var outer_scale = svg.append("g").attr("id", "outer_scale");
-var fillBars_group = svg.append("g").attr("id", "fillBars");
 
+var fillBars_group = svg.append("g").attr("id", "fillBars");
+var outer_scale = svg.append("g").attr("id", "outer_scale");
 var context_arc_group = context.append("g").attr("class", "context_arc");
 
 var context_handles = context.append("g").attr("class", "context_handles");
@@ -153,8 +144,8 @@ var rect_zoom = svg
   .append("rect") // zoom rectangle covers large portion only
   .attr("id", "zoom_rectangle")
   .attr("class", "zoom")
-  .attr("width", width)
-  .attr("height", height)
+  .attr("width", window.innerWidth) // 2*width)
+  .attr("height", 2*height)
   .attr("transform", "translate(0," + view_offset + ")");
 
 var labels_group = svg.append("g").attr("id", "labels");
@@ -233,8 +224,8 @@ function addBrush() {
   //context_arc_group.call(drag)
   rect_zoom.call(zoom);
   zoom
-    .translateExtent([[0, 0], [width, height]])
-    .extent([[0, 0], [width, height]]);
+    .translateExtent([[0, 0], [2*width, 2*height]])
+    .extent([[0, 0], [2*width, 2*height]]);
   // .scaleExtent([0.1,width/(2*d3.min(thelist, (d)=>(d.x1-d.x0)))])
 } // addBrush
 
@@ -242,6 +233,8 @@ function addBrush() {
 // Helper Functions - SVG/DOM Elements
 // -------------------------------------------------------------
 var fullheight;
+
+
 function reScale() {
   // recalculate scales based on new window size
   let sb = d3
@@ -252,24 +245,26 @@ function reScale() {
   side_width = d3.select("#sidebar").classed("active") ? 350 : 0;
   width1 = window.innerWidth - side_width - 2 * margin;
   fullheight = window.innerHeight - 150; // usable height
-  height = fullheight * (1 - context_pct);
-  if (width1 / height > 2) {
-    width = height * 2;
+  height = fullheight/2 //* (1 - context_pct);
+  if (width1 > height) {
+    width = height //* 2;
   } else {
-    width = width1;
-    height = width1 / 2;
-    fullheight = height / (1 - context_pct);
+    width = height /2 //width1;
+    //height = width1 / 2;
+    //fullheight = height / (1 - context_pct);
   }
-
-  view_offset = context_pct * fullheight;
-  svg.style("width", width + margin + (width1 - width) / 2);
+  //height = d3.min([0.9*window.innerHeight,
+  //                 0.95*(window.innerWidth-side_width)/aspect_ratio]);
+  //width = aspect_ratio * height
+  view_offset = 0 //height //context_pct * fullheight;
+  svg.style("width", window.innerWidth - 2 * margin)//width + margin + (width1 - width) / 2);
   svg.style("height", window.innerHeight - 130);
 
-  rect_zoom.attr("width", width);
-  rect_zoom.attr("height", height);
+  rect_zoom.attr("width", 2*width);
+  rect_zoom.attr("height", 2*height);
   rect_zoom.attr(
     "transform",
-    "translate(" + (margin + (width1 - width) / 2) + "," + view_offset + ")"
+    "translate(" + (margin + (width1 - 2*width) / 2) + "," + view_offset + ")"
   );
   //oldx = x.copy()
   x.range([0, height]);
@@ -281,40 +276,40 @@ function reScale() {
   xScaleFull.range([0, partition_w]).domain([0, root.value]);
   d3.select("#canvas_container")
     .style("top", view_offset + "px")
-    .style("left", margin + (width1 - width) / 2 + "px");
+    .style("left", margin + (width1 - 2*width) / 2 + "px");
   d3.select("#canvas_container2")
     .style(
       "left",
-      margin + (width1 - width) / 2 + ((1 - context_pct) * width) / 2 + "px"
+      (margin) + "px"
     )
-    .style("top", "20px");
+    .style("top", margin + "px");
   fillBars_group.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + "," + view_offset + ")"
+    "translate(" + (width1 / 2 + margin) + "," + height + ")"
   );
   arc_select_tagged.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + "," + view_offset + ")"
+    "translate(" + (width1 / 2 + margin) + "," + height + ")"
   );
   context_arc_group.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + ",20)"
+    "translate(" + (margin+ context_pct* width) + "," + (margin+ context_pct* height)+")"
   );
   arc_context_tagged.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + ",20)"
+    "translate(" + (margin+ context_pct* width) + "," + (margin+ context_pct* height)+")"
   );
   context_handles.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + ",20)"
+    "translate(" + (margin+ context_pct* width) + "," + (margin+ context_pct* height)+")"
   );
   labels_group.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + "," + view_offset + ")"
+    "translate(" + (width1 / 2 + margin) + "," + height + ")"
   );
   outer_scale.attr(
     "transform",
-    "translate(" + (width1 / 2 + margin) + "," + view_offset + ")"
+    "translate(" + (width1 / 2 + margin) + "," + height + ")"
   );
   d3.select("#tooltip-body").classed("d-none", !visOptions.tooltips.value);
   drawLabels();
@@ -368,7 +363,6 @@ d3.json(datafile)
   });
 } // end load data
 
-
 if (dfile =="Animalia") {
     var datafile = "../data/animalia.json" }
 else if (dfile =="Flare") {
@@ -376,6 +370,8 @@ else if (dfile =="Flare") {
 else datafile ='../data/chibrowseoff.json'
 
 load_data()
+
+
 
 //--------------------------------------------------------------
 // Initialise Visualisation
@@ -407,18 +403,18 @@ function init() {
   mesh_context_group = new THREE.Group();
   mesh_group = new THREE.Group();
   resolution = new THREE.Vector2(partition_w, partition_h);
-    d3.selectAll("canvas").remove();
+  d3.selectAll("canvas").remove();
   //var pivot = new THREE.Object3D();
   // set geometry and data for vis
-  barheight = (0.45 * partition_h) / (root.height + 2.5); // fills vis
+  barheight = (0.45 * partition_h) / (root.height + 2); // fills vis
   thelist = root.descendants().sort(compareByValue);
 
   // create camera - aspect ratio for scaling of vis
   camera = new THREE.OrthographicCamera(
     partition_h / -2,
     partition_h / 2,
-    partition_h / 4,
-    partition_h / -4,
+    partition_h / 2,
+    partition_h / -2,
     1,
     1000
   );
@@ -441,7 +437,7 @@ function init() {
   //renderer.autoClear = false;
 
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(2 * height, height);
+  renderer.setSize(2 * height, 2*height);
 
   container = document.getElementById("canvas_container");
   container.appendChild(renderer.domElement);
@@ -461,7 +457,7 @@ function init() {
   //mesh_circles_group.position.z = 1
   mesh_line_h.position.z = 5; // always in front
   mesh_group.rotation.z = -Math.PI / 2;
-  mesh_group.position.y = partition_h / 4; //-context_pct*barheight*(root.height+4)
+  mesh_group.position.y = 0 //partition_h / 2; //-context_pct*barheight*(root.height+4)
 
   // Add mesh group to scene
   scene.add(mesh_group);
@@ -479,21 +475,11 @@ function init() {
 
   mesh_line_context.position.z = 5;
   mesh_context_group.rotation.z = -Math.PI / 2;
-  mesh_context_group.position.y = partition_h / 4;
-  //mesh_context_group.scale.y  =  context_pct*0.8
-
-  // Pointers for context review
-  //p1 = makePointer()
-  //p2 = makePointer()
-  //mesh_context_group.add(p1)
-  //mesh_context_group.add(p2)
-  //p1.position.z = p2.position.z = 10
-  //p2.rotation.z = +rads2(rads.domain()[1])+Math.PI/2
-
+  mesh_context_group.position.y = 0 //partition_h / 2;
   renderer2 = new THREE.WebGLRenderer({ alpha: false, antialias: true });
 
   renderer2.setPixelRatio(window.devicePixelRatio);
-  renderer2.setSize(height * 2 * context_pct, height * context_pct);
+  renderer2.setSize(height * 2 * context_pct, 2*height * context_pct);
 
   container2 = document.getElementById("canvas_container2");
   container2.appendChild(renderer2.domElement);
@@ -501,8 +487,7 @@ function init() {
 
   // Final updates for initialisation
   updateMorphs(-2, 2);
-  //updateInnerCircleColor(mesh_circles[0], 0xFFFFFF)
-  //updateInnerCircleColor(mesh_circles[1], thelist[0].color)
+
 
   rect_zoom
     .on("mousemove", function() {
@@ -688,8 +673,8 @@ function make_rings() {
       0, // ax, aY
       r,
       r, // xRadius, yRadius
-      -Math.PI / 2,
-      +Math.PI / 2, // aStartAngle, aEndAngle
+      -Math.PI ,
+      +Math.PI , // aStartAngle, aEndAngle
       false, // aClockwise
       0 // aRotation
     );
@@ -770,10 +755,12 @@ function nodelist_radial(tolerance) {
 
   return thelist.filter(function(d) {
     //start_angle = rads2(d.x0)
+
     sweep = rads(d.x1) - rads(d.x0);
     label_angle = rads2((d.x1 + d.x0) / 2); // translate to shown charts
-
-    length = x(2 * (d.depth + 1) * barheight * Math.sin(sweep / 2));
+    length = x(2 * (d.depth + 1) * barheight * sweep / 6.28);
+    if (d.data.name =="Places"){
+    }
     return (
       length > tolerance && d.x1 > rads.domain()[0] && d.x0 < rads.domain()[1]
     );
@@ -1038,7 +1025,7 @@ function drawLabels() {
   //current_zoom_node= largestCurrent()
   labels = labels_group
     .selectAll("text")
-    .data(nodelist_radial(20), function(d) {
+    .data(nodelist_radial(10), function(d) {
       return d.id;
     });
   var np = nodePartials();
@@ -1086,8 +1073,8 @@ function labelText(d, partials) {
   var length =
     d == root
       ? x(barheight * 4)
-      : x(2 * (d.depth + 1) * barheight * Math.sin(sweep / 2));
-  var showLimit = 7; //partials.indexOf(d) >-1 ? 11:9
+      : x(2 * (d.depth + 1) * barheight * sweep / 6.28);
+  var showLimit = 6; //partials.indexOf(d) >-1 ? 11:9
   var text_length = Math.floor(length / showLimit);
   var preAdd = d.x0 < rads.domain()[0] ? "&#8606;" : "";
   var postAdd = d.x1 > rads.domain()[1] ? "&#8608;" : "";
@@ -1175,10 +1162,10 @@ function render() {
 
 function onWindowResize() {
   reScale();
-  camera.aspect = 2;
+  //camera.aspect = 2;
   console.log("window resize to:", width, height);
-  renderer.setSize(height * 2, height);
-  renderer2.setSize(height * 2 * context_pct, height * context_pct);
+  renderer.setSize(height * 2, 2*height);
+  renderer2.setSize(height * 2 * context_pct, 2*height * context_pct);
   mesh_context_group.scale.y = context_pct * 0.8;
   d3.select("#tooltip-body").classed("d-none", !visOptions.tooltips.value);
   camera.updateProjectionMatrix();
@@ -1206,16 +1193,31 @@ function zoomed() {
 
   var x1_ = rads.domain()[1];
   var x0_ = rads.domain()[0];
-  var m = mouseTrack.x - d3.mouse(this)[0];
+  var mx = mouseTrack.x - d3.mouse(this)[0];
+  var my = mouseTrack.y - d3.mouse(this)[1];
+  var m = (mx +my)/2
+  console.log(mouseTrack.x > x2.range()[1], mouseTrack.y < x2.range()[1])
+  // direction depends on the quadrant
+  if (mouseTrack.x > x2.range()[1] &&
+      mouseTrack.y <= x2.range()[1]){
+        m = (- mx - my)/2}
+  else if (mouseTrack.x > x2.range()[1] &&
+          mouseTrack.y > x2.range()[1]){
+        m = (mx - my)/2}
+  else if (mouseTrack.x < x2.range()[1] &&
+          mouseTrack.y <= x2.range()[1]){
+      m = (-mx +my)/2}
   var deltaT = 0;
   var deltaZ = 0;
   zoom_x = rads2.domain()[1] / (x1_ - x0_);
   if (old_zoom != zx) {
     deltaZ = ((x1_ - x0_) * (old_zoom / zx - 1)) / 4;
   } else if (m != 0) {
-    deltaT = (2 * x2.invert(m)) / zoom_x;
+    //if (my <0) { m = -m}
+    deltaT = ( x2.invert(m)) / zoom_x;
+    console.log("mmm", m, deltaT)
   }
-  //console.log("zoomStart", rads.domain(), zoom_x == old_zoom, m, deltaT, deltaZ,x0_-deltaZ+deltaT, x1_+deltaZ+deltaT)
+  console.log("zoomStart", rads.domain(), zoom_x == old_zoom, m, deltaT, deltaZ,x0_-deltaZ+deltaT, x1_+deltaZ+deltaT)
   minRad = d3.min([
     rads.domain()[0],
     rads2.invert(rads2(x0_ - deltaZ + deltaT))
@@ -1255,7 +1257,8 @@ function dragged() {
   ctx1 = d3.selectAll("#contextHandle1");
   x0_ = rads.domain()[0];
   x1_ = rads.domain()[1];
-  if (mouse_ < 0) return;
+  console.log("dragged", x0_, x1_)
+  //if (mouse_ < 0) return;
   if (which == "contextArc") {
     alpha_ = Math.atan2(dragStart.y, dragStart.x) - mouse_;
     alpha0 = Math.atan2(ctx0.attr("cx") * 1, ctx0.attr("cy") * 1) + alpha_;
@@ -1391,37 +1394,9 @@ function onMousemove() {
   }
 }
 
-// function set_tooltip(d){
-//    tooltip.style("display","block")
-//          .style("opacity", 1)
-//          .style("left", (d3.event.pageX-10) + "px")
-//          .style("top", (d3.event.pageY + 10) + "px")
-//    tooltip_head.html(d.data.name)
-//          .style("background-color", d.color)
-//    let html_str =
-//       "<table>"+
-//       "<tr><td>ID: </td><td>" + d.id+"</td></tr>"+
-//       "<tr><td>Value: </td><td>" + format_number(d.value) + "</td></tr>"+
-//       "<tr><td>Depth: </td><td>" + d.depth + "</td></tr>"
-//       if(d.parent) {
-//          html_str +=
-//       "<tr><td>Parent: </td><td>" + d.parent.data.name +"</td><tr>"
-//          if(d.parent.children){
-//                html_str += "<tr><td>Siblings:</td><td>" + d.parent.children.length +"</td></tr>"}}
-//       if(d.children){
-//          html_str += "<tr><td>Children:</td><td>" + d.children.length +"</td></tr>"}
-//       html_str += "<tr><td>Range:</td><td>"+formatDecimal(d.x0)+ " - " + formatDecimal(d.x1 )+ "</td></tr>"
-//       html_str += "</table>"
-//       tooltip_body.html(html_str)
-// }
 
 function select_nodes() {
   scene.remove(mesh_highlight);
-  //mesh_highlight = make_icicle(selected_nodes, true)
-  //mesh_highlight.scale.x = mesh.scale.x
-  //mesh_highlight.position.y = mesh.position.y
-  //mesh_highlight.position.x = mesh.position.x
-  //scene.add(mesh_highlight)
   render();
 }
 
@@ -1715,11 +1690,16 @@ function transformTick(v, label) {
 }
 
 function makeTickLine(d) {
+
   var linePath = [];
   var unit_length = 1 / (root.height + 2);
+  if (d.label == 0) {
+    linePath.push({ x: 0, y: barheight-20 });
+    linePath.push({ x: 0, y: (root.height-2)*barheight -20});
+  } else {
   linePath.push({ x: -1.1 * d.x * unit_length, y: -1.1 * d.y * unit_length });
   linePath.push({ x: -0.7 * d.x * unit_length, y: -0.7 * d.y * unit_length });
-
+}
   //console.log(linePath)
   return line(linePath);
 }
@@ -1739,12 +1719,11 @@ function updateScale() {
   var ticks = xScale.ticks();
   last_gap = fullScale[1] - ticks[ticks.length - 1];
   var add_ = [];
-  if (fullScale[1] - ticks[ticks.length - 1] > 0.3 * (ticks[1] - ticks[0])) {
-    add_ = [fullScale[1].toFixed(0)];
+  if (fullScale[1] - ticks[ticks.length - 1] < 0.1 * (ticks[1] - ticks[0])) {
+    ticks.pop()
   }
   dData = ticks.concat(add_).map(d => transformTick(xScale(d), d)[0]);
 
-  //console.log(dData);
   var outer_ticks = svg
     .select("#outer_scale")
     .selectAll("g")
@@ -1776,7 +1755,8 @@ function updateScale() {
   ot.append("path")
     .attr("class", "ticks")
     .attr("d", d => makeTickLine(d))
-    .style("stroke", "#000000");
+    .style("stroke", "#000000")
+    .style("z-index", 20)
   outer_ticks
     .merge(ot)
     .select("path")
