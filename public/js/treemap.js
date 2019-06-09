@@ -37,6 +37,7 @@ var data = {},
   selected_nodes = [],
   comparator = compareByCategory,
   vis = "Treemap",
+  visload = "treemap"
   update_duration = 200,
   selected_level = 1;
 
@@ -517,8 +518,14 @@ function load_data() {
       console.log(err);
     });
 } // end load data
-datafile = "../data/chibrowseoff.json";
-load_data();
+if (dfile =="Animalia") {
+    var datafile = "../data/animalia.json" }
+else if (dfile =="Flare") {
+  var datafile = '../data/flare.json'}
+else datafile ='../data/chibrowseoff.json'
+
+load_data()
+
 //--------------------------------------------------------------
 // Initialise Visualisation
 // -------------------------------------------------------------
@@ -1090,7 +1097,7 @@ function label_text(d) {
 // TWEEN FUNCTIONS
 // -------------------------------------------------------------
 
-var tweenTime = 800;
+var tweenTime = 1200;
 var tween_current = { x0: 0, x1: x2.domain()[1], y0: 0, y1: y2.domain()[1] };
 var tween_target = { x0: 200, x1: 600, y0: 100, y1: 300 };
 

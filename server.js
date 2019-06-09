@@ -58,8 +58,8 @@ app.get('/vis/:visID', function (req, res) {
 })
 
 app.get('/vis1/:visID', function (req, res) {
-   let vistype = req.params.visID
-  res.render('vis_1', { title: '', vis: vistype })
+    console.log("--->", req.params, req.params.visID,req.params.visID.split("|")[1])
+  res.render('vis_1', { title: '', vis: req.params.visID.split("|")[0], dfile: req.params.visID.split("|")[1] })
 })
 
 app.get('/blog', function (req, res) {

@@ -61,6 +61,7 @@ var  data = {},
      selected_nodes = [],
      comparator = compareByCategory,
      vis = "IciclePlot",
+     visload = "icicle",
      update_duration = 200;
 
 
@@ -382,7 +383,13 @@ d3.json(datafile).then(function(data) {
     console.log(err);
   }); // end of initial promise
 }  // end load data
-var datafile = '../data/chibrowseoff.json'
+if (dfile =="Animalia") {
+    var datafile = "../data/animalia.json" }
+else if (dfile =="Flare") {
+  var datafile = '../data/flare.json'}
+else datafile ='../data/chibrowseoff.json'
+
+
 
 load_data()
 //--------------------------------------------------------------
