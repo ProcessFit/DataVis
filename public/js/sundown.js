@@ -1,3 +1,4 @@
+
 // https://jsfiddle.net/prisoner849/h2s2nnpc/
 //https://github.com/mrdoob/three.js/blob/master/examples/canvas_interactive_cubes.html
 //http://vuoriov4.com/how-to-reduce-draw-calls-in-three-js
@@ -370,10 +371,10 @@ d3.json(datafile)
 
 
 if (dfile =="Animalia") {
-    var datafile = "../data/animalia.json" }
+    var datafile = "data/animalia.json" }
 else if (dfile =="Flare") {
-  var datafile = '../data/flare.json'}
-else datafile ='../data/chibrowseoff.json'
+  var datafile = 'data/flare.json'}
+else datafile ='data/chibrowseoff.json'
 
 load_data()
 

@@ -1,0 +1,74 @@
+extends ../layout
+
+block extraHeader
+	link(rel='stylesheet', href='/css/style_old1.css')
+	style.
+		body {
+			padding-left: 0;
+		}
+		.col-lg-6 div > h1 {
+			margin: 0;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			color: black !important;
+			opacity: 1 !important;
+		}
+
+		.col-lg-6 div {
+			width:100%;
+			aspect-ratio:1/0.5;
+			background-size: contain !important;
+			border: 3px solid #54b4eb;
+			border-radius: 12px;
+			text-align: center;
+			line-height: 100%;
+			transition: opacity .1s ease-in-out;
+			-moz-transition: opacity .1s ease-in-out;
+			-webkit-transition: opacity .1s ease-in-out;
+
+		}
+
+		.col-lg-6 div:hover {
+			opacity: 0.3;
+		}
+
+		.icicle {
+			background: url("images/icicle.png")
+		}
+		.sundown {
+			background: url("images/sundown.png")
+		}
+		.treemap {
+			background: url("images/treemap.png")
+		}
+		.sunburst {
+			background: url("images/sunburst.png")
+		}
+
+		.col-lg-6 {
+			margin-bottom: 20px;
+		}
+
+
+block content
+	h1= title
+	.container
+		.row.g-4.samples
+			.col-lg-6
+				a(href="icicle.html")
+					.icicle
+						h1 Icicle
+			.col-lg-6
+				a(href="sundown.html")
+					.sundown
+						h1 Sundown
+			.col-lg-6
+				a(href="treemap.html")
+					.treemap
+						h1 Treemap
+			.col-lg-6
+				a(href="sunburst.html")
+					.sunburst
+						h1 Sunburst

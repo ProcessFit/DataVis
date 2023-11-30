@@ -1,3 +1,4 @@
+
 // https://jsfiddle.net/prisoner849/h2s2nnpc/
 //https://github.com/mrdoob/three.js/blob/master/examples/canvas_interactive_cubes.html
 //http://vuoriov4.com/how-to-reduce-draw-calls-in-three-js
@@ -32,10 +33,10 @@ var x = d3.scaleLinear().domain([0,partition_w])
                         .range([0, partition_h])
      rads = d3.scaleLinear().domain([0,partition_w])
                         .range([-Math.PI,Math.PI])
-                        .clamp(true)
+						.clamp(true)
      rads2 = d3.scaleLinear().domain([0,partition_w])
                    .range([-Math.PI,Math.PI])
-                   .clamp(true)
+				   .clamp(true)
      three_x = d3.scaleLinear().domain([0,partition_w]).range([-500,500]),
      three_y = d3.scaleLinear().domain([0,partition_h]).range([500,-500]),
      oldx = d3.scaleLinear().domain([0,partition_w]).range([0,partition_w]),
@@ -183,12 +184,6 @@ var visOptions = {
   tooltips: {
     id: "tooltips",
     label: "Show full tooltip",
-    type: "check",
-    value: false
-  },
-  helpernodes: {
-    id: "helpernodes",
-    label: "Zoom to helper nodes?",
     type: "check",
     value: false
   }
@@ -364,10 +359,10 @@ d3.json(datafile)
 } // end load data
 
 if (dfile =="Animalia") {
-    var datafile = "../data/animalia.json" }
+    var datafile = "data/animalia.json" }
 else if (dfile =="Flare") {
-  var datafile = '../data/flare.json'}
-else datafile ='../data/chibrowseoff.json'
+  var datafile = 'data/flare.json'}
+else datafile ='data/chibrowseoff.json'
 
 load_data()
 
@@ -1257,10 +1252,18 @@ function dragged() {
   ctx1 = d3.selectAll("#contextHandle1");
   x0_ = rads.domain()[0];
   x1_ = rads.domain()[1];
-  console.log("dragged", x0_, x1_)
   //if (mouse_ < 0) return;
   if (which == "contextArc") {
     alpha_ = Math.atan2(dragStart.y, dragStart.x) - mouse_;
+
+	// GIVE ME THE SHORT WAY AROUND THE CIRCLE (2 deg not 358 deg)
+	if (alpha_ > Math.PI) {
+		alpha_ = 2*Math.PI - alpha_
+	}
+	if (alpha_ < -Math.PI) {
+		alpha_ = 2*Math.PI + alpha_
+	}
+
     alpha0 = Math.atan2(ctx0.attr("cx") * 1, ctx0.attr("cy") * 1) + alpha_;
     alpha1 = Math.atan2(ctx1.attr("cx") * 1, ctx1.attr("cy") * 1) + alpha_;
     dragStart.x = d3.event.x;
@@ -1276,10 +1279,29 @@ function dragged() {
     alpha1 = Math.atan2(ctx1.attr("cx") * 1, ctx1.attr("cy") * 1);
   }
 
+  // MAKE SURE ALPHA 0 IS MIN
+  if (alpha1 < alpha0) {
+	temp = alpha1
+	alpha1 = alpha0
+	alpha0 = temp
+  }
+
+  // CHECK FOR ALPHA0 EDGE TO MAKE MIN WIDTH (left side top)
+  if (alpha0 < 0) {
+	alpha0 = Math.max(alpha0, -Math.PI)
+	alpha1 = Math.max(alpha1,alpha0+0.1)
+  }
+
+  // CHECK FOR ALPHA1 EDGE TO MAKE MIN WIDTH (right side top)
+  if (alpha1 > 0) {
+	alpha1 = Math.min(alpha1, Math.PI)
+	alpha0 = Math.min(alpha0,alpha1-0.1)
+  }
+
   // update radial domain etc.
   rads.domain([
-    d3.min([rads2.invert(alpha0), rads2.invert(alpha1)]),
-    d3.max([rads2.invert(alpha0), rads2.invert(alpha1)])
+    rads2.invert(alpha0),
+    rads2.invert(alpha1)
   ]);
   updateMorphs(
     d3.min([x0_, rads.domain()[0]]),
@@ -1638,13 +1660,13 @@ function tagNodes_arcs(triggeredByTag) {
     .text(function(d) {
       return d.data.name;
     })
-    .on("click", function(d) {
+    // .on("click", function(d) {
 
-      if (!visOptions.helpernodes.value) return;
-      currentNode = d
-      zoomSource = "tagged_text";
-      zoomTo(d);
-    })
+    //   if (!visOptions.helpernodes.value) return;
+    //   currentNode = d
+    //   zoomSource = "tagged_text";
+    //   zoomTo(d);
+    // })
     .append("button")
     .style("float", "right")
     .text("x")

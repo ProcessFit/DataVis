@@ -585,13 +585,6 @@ var option_set = [];
 var all_questions = [];
 var viewmode = "Show Visualisation";
 
-d3.json("../data/questions.json").then(function(data) {
-  all_questions = data;
-  questions = data.category_questions;
-  option_set = data.option_types;
-  console.log("questions", questions, all_questions);
-});
-
 //question_init()
 
 setButton = function(btnName, text){
@@ -944,7 +937,7 @@ function addOptionsDiv() {
       console.log(this.value);
 
       log_options({ option: "file", value: this.value });
-      window.location.href ="/vis1/"+visload +"|" +this.value
+      document.location = "?f="+this.value;
       //load_data();
       //this.href = "/"+vis+"|"+
     });
@@ -1948,14 +1941,7 @@ function pipeline3(_evalnum, qnum) {
 }
 
 function data_pipeline(param) {
-  //var inputDate = new Date(myDate.toISOString());
-  console.log([param]);
-  fetch("/agg/" + JSON.stringify(param))
-    .then(response => response.json())
-    .then(data => {
-      console.log("data is", data, data.length);
-      makeReport(data);
-    });
+  return
 }
 
 data_pipeline(pipeline1());

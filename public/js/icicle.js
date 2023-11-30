@@ -1,3 +1,4 @@
+
 // https://jsfiddle.net/prisoner849/h2s2nnpc/
 //https://github.com/mrdoob/three.js/blob/master/examples/canvas_interactive_cubes.html
 //http://vuoriov4.com/how-to-reduce-draw-calls-in-three-js
@@ -108,12 +109,7 @@ var visOptions = {
          {'id': 'tooltips',
          'label':'Show full tooltip',
          'type': 'check',
-         'value': false},
-    'helpernodes':
-         {'id': 'helpernodes',
-          'label': 'Zoom to helper nodes?',
-          'type': 'check',
-          'value': false}
+         'value': false}
     }
 var opts = []
 for (var key in visOptions){
@@ -338,7 +334,7 @@ d3.json(datafile).then(function(data) {
     if (typeof d.children=='undefined') {
        d.data.v = +d.data.size==1?  ((rand()*40).toFixed(2)+1) : d.data.size
      }
-   if (datafile == '../data/chibrowseoff.json'){
+   if (datafile == 'data/chibrowseoff.json'){
    d.data.name = d.data.name.replace(" 1","")
   }
    })
@@ -384,10 +380,10 @@ d3.json(datafile).then(function(data) {
   }); // end of initial promise
 }  // end load data
 if (dfile =="Animalia") {
-    var datafile = "../data/animalia.json" }
+    var datafile = "data/animalia.json" }
 else if (dfile =="Flare") {
-  var datafile = '../data/flare.json'}
-else datafile ='../data/chibrowseoff.json'
+  var datafile = 'data/flare.json'}
+else datafile ='data/chibrowseoff.json'
 
 
 
